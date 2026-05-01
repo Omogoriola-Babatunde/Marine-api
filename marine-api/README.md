@@ -99,7 +99,7 @@ Paginated list of quotes (newest first). `limit` capped at 100.
 Issue a policy from an existing quote and generate its certificate PDF.
 
 ```json
-{ "Quoteid": "<UUID of an existing Quote>", "customername": "Acme Co" }
+{ "quoteId": "<UUID of an existing Quote>", "customername": "Acme Co" }
 ```
 
 Returns:

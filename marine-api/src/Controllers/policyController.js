@@ -12,15 +12,15 @@ const POLICY_NUMBER_RE = /^POL-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[
 
 export const createPolicy = async (req, res) => {
   try {
-    const { Quoteid, customername } = req.body;
+    const { quoteId, customername } = req.body;
 
-    const validation = validatePolicyInput({ Quoteid, customername });
+    const validation = validatePolicyInput({ quoteId, customername });
     if (!validation.valid) {
       return res.status(400).json({ errors: validation.errors });
     }
 
     const quote = await prisma.quote.findUnique({
-      where: { id: Quoteid },
+      where: { id: quoteId },
     });
     if (!quote) {
       return res.status(404).json({ error: "Quote not found" });
@@ -30,7 +30,7 @@ export const createPolicy = async (req, res) => {
     const policy = await prisma.policy.create({
       data: {
         policyNumber,
-        quoteId: Quoteid,
+        quoteId,
         customername,
         status: "active",
       },
