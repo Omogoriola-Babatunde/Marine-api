@@ -3,26 +3,31 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 model Quote {
-  id    String   @id @default(uuid())
-  classType  String
-  cargoType String
-  cargoValue Float
-  origin    String
-  destination   String
-  premium   Float
-  createdAt     DateTime @default(now())
+  id          String   @id @default(uuid())
+  classType   String
+  cargoType   String
+  cargoValue  Float
+  origin      String
+  destination String
+  premium     Float
+  createdAt   DateTime @default(now())
+  policies    Policy[]
+
+  @@index([createdAt])
 }
 
-
 model Policy {
-  id    String   @id @default(uuid())
-  policyNumber String @unique
-  Quoteid String
-  customername    String
-  status   String
-  createdAt     DateTime @default(now())
+  id           String   @id @default(uuid())
+  policyNumber String   @unique
+  quoteId      String
+  quote        Quote    @relation(fields: [quoteId], references: [id])
+  customername String
+  status       String
+  createdAt    DateTime @default(now())
+
+  @@index([quoteId])
 }
