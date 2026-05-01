@@ -17,26 +17,28 @@ Express 5 + Prisma 7 (PostgreSQL) service for issuing **marine cargo insurance q
 ## Prerequisites
 
 - Node ≥ 18.11
+- pnpm ≥ 10 (`corepack enable` or `npm i -g pnpm`)
 - A reachable PostgreSQL instance
-- Chrome download for Puppeteer (one-time, ~150 MB)
+- Chrome download for Puppeteer (auto-installed via pnpm; ~150 MB)
 
 ## Setup
 
 ```bash
 git clone https://github.com/Omogoriola-Babatunde/Marine-api.git
 cd Marine-api/marine-api
-npm install
+pnpm install
 cp .env.example .env
 # edit .env and set DATABASE_URL
-node node_modules/prisma/build/index.js migrate deploy
-node node_modules/puppeteer/install.mjs   # one-time, fetches Chrome
+pnpm exec prisma migrate deploy
 ```
+
+`pnpm install` automatically runs Prisma's `generate` (postinstall) and Puppeteer's Chrome install — no separate steps needed.
 
 ## Run
 
 ```bash
-npm run dev      # node --watch, restarts on save
-npm start        # plain node
+pnpm dev      # node --watch, restarts on save
+pnpm start    # plain node
 ```
 
 Server listens on `http://localhost:3000` by default. `GET /` returns a liveness string.
@@ -118,11 +120,11 @@ Indexes on `Quote.createdAt` and `Policy.quoteId`.
 
 | Script | What it does |
 |---|---|
-| `npm run dev` | Start with `node --watch` |
-| `npm start` | Plain `node server.js` |
-| `npm run lint` | `biome lint .` |
-| `npm run format` | `biome format --write .` |
-| `npm run check` | `biome check --write .` (lint + format + import sort) |
+| `pnpm dev` | Start with `node --watch` |
+| `pnpm start` | Plain `node server.js` |
+| `pnpm lint` | `biome lint .` |
+| `pnpm format` | `biome format --write .` |
+| `pnpm check` | `biome check --write .` (lint + format + import sort) |
 
 ## Project layout
 
