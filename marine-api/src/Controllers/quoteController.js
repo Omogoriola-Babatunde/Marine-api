@@ -1,9 +1,9 @@
-import { getPrismaClient } from "../config/db.js";
+import pkg from @prisma/client;";
 import { calculatePremium } from "../Services/quotesServices.js";
 import { validateQuoteInput } from "../utils/validation.js";
 
 const prisma = getPrismaClient();
-
+const { PrismaClient } = pkg;
 export const createQuotes = async (req, res) => {
     try {
         const { classType, cargoType, cargoValue, origin, destination } = req.body;
