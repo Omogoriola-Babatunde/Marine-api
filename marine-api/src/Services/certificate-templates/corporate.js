@@ -37,7 +37,7 @@ export const renderHtml = (policy, quote) => `<!DOCTYPE html>
     font-size: 92px;
     font-weight: 800;
     letter-spacing: 0.08em;
-    color: #0f766e;
+    color: #0f172a;
     opacity: 0.06;
     white-space: nowrap;
     pointer-events: none;
@@ -45,10 +45,10 @@ export const renderHtml = (policy, quote) => `<!DOCTYPE html>
     z-index: 0;
   }
 
-  /* Top brand band — flat color */
+  /* Top brand band — flat black */
   .header {
-    background: #0f766e;
-    color: #ecfdf5;
+    background: #0f172a;
+    color: #ffffff;
     padding: 14mm 18mm 12mm;
     position: relative;
     z-index: 1;
@@ -122,7 +122,7 @@ export const renderHtml = (policy, quote) => `<!DOCTYPE html>
     font-weight: 600;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: #0f766e;
+    color: #0f172a;
     margin-bottom: 3mm;
   }
   .field { margin-bottom: 3mm; }
@@ -143,7 +143,7 @@ export const renderHtml = (policy, quote) => `<!DOCTYPE html>
     margin-bottom: 7mm;
     background: #ffffff;
   }
-  .voyage .hd { font-size: 9px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: #0f766e; margin-bottom: 4mm; }
+  .voyage .hd { font-size: 9px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: #0f172a; margin-bottom: 4mm; }
   .voyage-flow {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
@@ -155,15 +155,15 @@ export const renderHtml = (policy, quote) => `<!DOCTYPE html>
   .voyage-flow .port.right { text-align: right; }
   .voyage-flow .arrow {
     display: flex; flex-direction: column; align-items: center; gap: 1mm;
-    color: #0f766e;
+    color: #0f172a;
   }
   .voyage-flow .arrow .line {
-    width: 30mm; height: 1px; background: #0f766e;
+    width: 30mm; height: 1px; background: #0f172a;
     position: relative;
   }
   .voyage-flow .arrow .line::after {
     content: ""; position: absolute; right: 0; top: -1mm;
-    border-left: 1.5mm solid #0f766e;
+    border-left: 1.5mm solid #0f172a;
     border-top: 1mm solid transparent;
     border-bottom: 1mm solid transparent;
   }
@@ -171,8 +171,8 @@ export const renderHtml = (policy, quote) => `<!DOCTYPE html>
 
   /* Coverage hero — flat color */
   .coverage {
-    background: #f0fdfa;
-    border: 1px solid #99f6e4;
+    background: #ffffff;
+    border: 1px solid #94a3b8;
     border-radius: 3mm;
     padding: 6mm;
     margin-bottom: 7mm;
@@ -181,7 +181,7 @@ export const renderHtml = (policy, quote) => `<!DOCTYPE html>
     gap: 6mm;
     align-items: end;
   }
-  .coverage .left .k { font-size: 9px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: #0f766e; margin-bottom: 1.5mm; }
+  .coverage .left .k { font-size: 9px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: #0f172a; margin-bottom: 1.5mm; }
   .coverage .left .v {
     font-size: 36px; font-weight: 700; letter-spacing: -0.03em;
     color: #0f172a; line-height: 1;
@@ -251,7 +251,7 @@ export const renderHtml = (policy, quote) => `<!DOCTYPE html>
           <div class="mark">
             <svg viewBox="0 0 32 32" fill="none">
               <path d="M16 4 L16 28 M9 10 L23 10 M6 18 Q16 24 26 18 Q22 28 16 28 Q10 28 6 18 Z"
-                    stroke="#ecfdf5" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+                    stroke="#ffffff" stroke-width="1.8" fill="none" stroke-linecap="round"/>
             </svg>
           </div>
           <div>
