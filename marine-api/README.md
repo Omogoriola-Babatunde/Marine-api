@@ -41,15 +41,15 @@ pnpm dev      # node --watch, restarts on save
 pnpm start    # plain node
 ```
 
-Server listens on `http://localhost:3000` by default.
+Server listens on `http://localhost:4000` by default. (Port 4000 is chosen so a Next.js frontend can take port 3000 without conflict.)
 
 ### Where to poke around
 
 | What | URL |
 |---|---|
-| Swagger UI (try the API in the browser) | http://localhost:3000/api/docs |
-| OpenAPI 3 spec (JSON) | http://localhost:3000/api/docs.json |
-| Liveness check | http://localhost:3000/ |
+| Swagger UI (try the API in the browser) | http://localhost:4000/api/docs |
+| OpenAPI 3 spec (JSON) | http://localhost:4000/api/docs.json |
+| Liveness check | http://localhost:4000/ |
 
 ## Environment
 
@@ -58,14 +58,14 @@ Only `DATABASE_URL` is required.
 | Var | Default | Notes |
 |---|---|---|
 | `DATABASE_URL` | *required* | e.g. `postgresql://postgres:postgres@localhost:5432/marine_api` |
-| `PORT` | `3000` | HTTP port |
-| `ALLOWED_ORIGINS` | `http://localhost:3000` | Comma-separated CORS allowlist |
+| `PORT` | `4000` | HTTP port (3000 left free for a Next.js frontend) |
+| `ALLOWED_ORIGINS` | `http://localhost:5173,http://localhost:3000` | Comma-separated CORS allowlist (covers Vite & Next.js dev servers) |
 | `CERTIFICATE_DIR` | `<cwd>/certificates` | Where generated PDFs are written |
 | `NODE_ENV` | unset | Set to `production` to enable prod-only checks |
 
 ## API
 
-Base URL: `http://localhost:3000`. Interactive docs at [`/api/docs`](http://localhost:3000/api/docs).
+Base URL: `http://localhost:4000`. Interactive docs at [`/api/docs`](http://localhost:4000/api/docs).
 
 ### `POST /api/quote`
 
