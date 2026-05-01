@@ -1,0 +1,162 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Cancel in-progress runs of the same workflow on the same ref
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint & install (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: marine-api
+    strategy:
+      fail-fast: false
+      matrix:
+        # Test the lowest version `engines` claims to support, plus the latest.
+        # The lowest catches issues like the Prisma-7-needs-Node-20.19+ regression
+        # that broke our Railway deploy.
+        node: ["22", "24"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+          cache-dependency-path: marine-api/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        env:
+          # Skip Chrome download — not needed for lint/install verification,
+          # and shaves ~2 min off CI. The boot-smoke job below has the full puppeteer setup.
+          PUPPETEER_SKIP_DOWNLOAD: "true"
+
+      - name: Lint & format check
+        run: pnpm exec biome check .
+
+      - name: Generate Prisma client
+        run: pnpm exec prisma generate
+        env:
+          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
+
+  smoke:
+    name: Boot smoke test (Node 22 + Postgres)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: marine-api
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: marine
+          POSTGRES_PASSWORD: marine
+          POSTGRES_DB: marine_api
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://marine:marine@localhost:5432/marine_api
+      PORT: "4000"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: marine-api/pnpm-lock.yaml
+
+      - name: Install dependencies (skip Chrome — boot test doesn't render PDFs)
+        run: pnpm install --frozen-lockfile
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: "true"
+
+      - name: Apply migrations
+        run: pnpm exec prisma migrate deploy
+
+      - name: Boot server in background
+        run: |
+          node server.js > /tmp/server.log 2>&1 &
+          echo $! > /tmp/server.pid
+          for i in {1..20}; do
+            if curl -sf http://localhost:4000/ >/dev/null; then
+              echo "Server up after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Server never came up. Logs:"
+          cat /tmp/server.log
+          exit 1
+
+      - name: Smoke-test the API surface (no PDF generation)
+        run: |
+          set -euo pipefail
+          echo "GET /"
+          curl -sSf http://localhost:4000/
+
+          echo
+          echo "POST /api/quote — happy path"
+          QUOTE=$(curl -sSf -X POST http://localhost:4000/api/quote \
+            -H 'content-type: application/json' \
+            -d '{"classType":"B","cargoType":"crate","cargoValue":1000,"origin":"X","destination":"Y"}')
+          echo "$QUOTE"
+          echo "$QUOTE" | node -e 'let s="";process.stdin.on("data",c=>s+=c);process.stdin.on("end",()=>{const q=JSON.parse(s);if(q.premium!==7){console.error("premium mismatch:",q.premium);process.exit(1)}})'
+
+          echo
+          echo "GET /api/quote — pagination"
+          curl -sSf "http://localhost:4000/api/quote?page=1&limit=5" >/dev/null
+
+          echo
+          echo "POST /api/quote — invalid classType → expect 400"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:4000/api/quote \
+            -H 'content-type: application/json' \
+            -d '{"classType":"Z","cargoType":"x","cargoValue":1,"origin":"a","destination":"b"}')
+          [ "$STATUS" = "400" ] || { echo "expected 400, got $STATUS"; exit 1; }
+
+          echo
+          echo "POST /api/policy — invalid quoteId → expect 400"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:4000/api/policy \
+            -H 'content-type: application/json' \
+            -d '{"quoteId":"not-a-uuid","customername":"Acme"}')
+          [ "$STATUS" = "400" ] || { echo "expected 400, got $STATUS"; exit 1; }
+
+          echo
+          echo "GET /api/docs.json — OpenAPI spec served"
+          curl -sSf http://localhost:4000/api/docs.json | node -e 'let s="";process.stdin.on("data",c=>s+=c);process.stdin.on("end",()=>{const d=JSON.parse(s);if(d.openapi!=="3.0.3"){console.error("spec missing/wrong openapi version");process.exit(1)}if(!d.paths["/api/quote"]){console.error("path missing");process.exit(1)}})'
+
+          echo
+          echo "All smoke checks passed"
+
+      - name: Stop server
+        if: always()
+        run: |
+          if [ -f /tmp/server.pid ]; then
+            kill "$(cat /tmp/server.pid)" 2>/dev/null || true
+          fi
+
+      - name: Server log on failure
+        if: failure()
+        run: cat /tmp/server.log || true
