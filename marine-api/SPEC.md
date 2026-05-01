@@ -7,7 +7,7 @@ A small Express 5 + Prisma (SQLite) service for issuing **marine cargo insurance
 - **Entry point:** `server.js`
 - **App:** `src/app.js`
 - **Runtime:** Node.js (ESM, `"type": "module"`)
-- **DB:** SQLite via `@prisma/adapter-better-sqlite3` (Prisma 7)
+- **DB:** PostgreSQL via `@prisma/adapter-pg` + `pg` (Prisma 7)
 - **PDF engine:** Puppeteer 24 (single shared browser instance)
 
 ## 2. Configuration
@@ -16,7 +16,8 @@ A small Express 5 + Prisma (SQLite) service for issuing **marine cargo insurance
 |---|---|---|
 | `PORT` | `3000` | HTTP port |
 | `ALLOWED_ORIGINS` | `http://localhost:3000` | Comma-separated CORS origins |
-| `DATABASE_URL` | `file:./dev.db` | SQLite database file |
+| `DATABASE_URL` | *required* | Postgres connection string (e.g. `postgresql://user:pass@host:5432/db`) |
+| `CERTIFICATE_DIR` | `<cwd>/certificates` | Where generated PDFs are stored |
 
 Loaded via `dotenv/config` in `server.js` and `prisma.config.ts`.
 
