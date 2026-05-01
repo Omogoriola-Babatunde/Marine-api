@@ -41,7 +41,15 @@ pnpm dev      # node --watch, restarts on save
 pnpm start    # plain node
 ```
 
-Server listens on `http://localhost:3000` by default. `GET /` returns a liveness string.
+Server listens on `http://localhost:3000` by default.
+
+### Where to poke around
+
+| What | URL |
+|---|---|
+| Swagger UI (try the API in the browser) | http://localhost:3000/api/docs |
+| OpenAPI 3 spec (JSON) | http://localhost:3000/api/docs.json |
+| Liveness check | http://localhost:3000/ |
 
 ## Environment
 
@@ -57,10 +65,7 @@ Only `DATABASE_URL` is required.
 
 ## API
 
-Base URL: `http://localhost:3000`
-
-Interactive docs (Swagger UI): **http://localhost:3000/api/docs**
-OpenAPI 3 spec (JSON): **http://localhost:3000/api/docs.json**
+Base URL: `http://localhost:3000`. Interactive docs at [`/api/docs`](http://localhost:3000/api/docs).
 
 ### `POST /api/quote`
 
