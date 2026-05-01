@@ -33,8 +33,8 @@ export const validateQuoteInput = (data) => {
 export const validatePolicyInput = (data) => {
   const errors = [];
 
-  if (!isUuid(data.Quoteid)) {
-    errors.push("Quoteid is required and must be a valid UUID");
+  if (!isUuid(data.quoteId)) {
+    errors.push("quoteId is required and must be a valid UUID");
   }
 
   if (

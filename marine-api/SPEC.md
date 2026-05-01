@@ -73,7 +73,7 @@ Ordered by `createdAt desc`. Counts via `prisma.quote.count()` in parallel.
 
 **Request body**
 ```json
-{ "Quoteid": "string (Quote.id)", "customername": "string, ≤100 chars" }
+{ "quoteId": "string (Quote.id)", "customername": "string, ≤100 chars" }
 ```
 
 **Behavior**

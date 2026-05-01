@@ -65,9 +65,9 @@ export const openApiSpec = {
       },
       PolicyInput: {
         type: "object",
-        required: ["Quoteid", "customername"],
+        required: ["quoteId", "customername"],
         properties: {
-          Quoteid: { type: "string", format: "uuid", description: "ID of an existing Quote" },
+          quoteId: { type: "string", format: "uuid", description: "ID of an existing Quote" },
           customername: { type: "string", maxLength: 100, example: "Acme Co" },
         },
       },
@@ -194,7 +194,7 @@ export const openApiSpec = {
         tags: ["Policy"],
         summary: "Issue a policy and generate certificate PDF",
         description:
-          "Looks up the Quote by `Quoteid`, creates a Policy with a UUID-suffixed policyNumber, and renders a PDF certificate via Puppeteer.",
+          "Looks up the Quote by `quoteId`, creates a Policy with a UUID-suffixed policyNumber, and renders a PDF certificate via Puppeteer.",
         requestBody: {
           required: true,
           content: {
