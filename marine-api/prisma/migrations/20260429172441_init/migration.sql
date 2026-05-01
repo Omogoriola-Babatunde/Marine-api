@@ -14,11 +14,18 @@ CREATE TABLE "Quote" (
 CREATE TABLE "Policy" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "policyNumber" TEXT NOT NULL,
-    "Quoteid" TEXT NOT NULL,
+    "quoteId" TEXT NOT NULL,
     "customername" TEXT NOT NULL,
     "status" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Policy_quoteId_fkey" FOREIGN KEY ("quoteId") REFERENCES "Quote" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateIndex
+CREATE INDEX "Quote_createdAt_idx" ON "Quote"("createdAt");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Policy_policyNumber_key" ON "Policy"("policyNumber");
+
+-- CreateIndex
+CREATE INDEX "Policy_quoteId_idx" ON "Policy"("quoteId");

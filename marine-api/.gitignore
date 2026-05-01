@@ -7,6 +7,7 @@ dev.db-shm
 dev.db-wal
 certificate-*.pdf
 *.pdf
+certificates/
 dist/
 build/
 .DS_Store
