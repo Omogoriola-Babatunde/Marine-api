@@ -4,6 +4,16 @@ Express 5 + Prisma 7 (PostgreSQL) service for issuing **marine cargo insurance q
 
 > Demo / flow build. Auth, rate limiting, request logging, and tests are intentionally out of scope right now and will be added later.
 
+## Live demo
+
+Deployed on Railway:
+
+| | |
+|---|---|
+| Swagger UI | https://marine-api-production.up.railway.app/api/docs |
+| OpenAPI spec | https://marine-api-production.up.railway.app/api/docs.json |
+| Liveness | https://marine-api-production.up.railway.app/ |
+
 ## Stack
 
 - Node.js (ESM, `--watch`) ≥ 18.11
