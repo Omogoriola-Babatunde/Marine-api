@@ -59,6 +59,9 @@ Only `DATABASE_URL` is required.
 
 Base URL: `http://localhost:3000`
 
+Interactive docs (Swagger UI): **http://localhost:3000/api/docs**
+OpenAPI 3 spec (JSON): **http://localhost:3000/api/docs.json**
+
 ### `POST /api/quote`
 
 Create a quote and compute its premium.

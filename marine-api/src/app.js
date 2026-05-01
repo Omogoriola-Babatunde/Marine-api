@@ -1,6 +1,8 @@
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
+import swaggerUi from "swagger-ui-express";
+import { openApiSpec } from "./config/openapi.js";
 import policyRoutes from "./Routes/policyRoutes.js";
 import quoteRoutes from "./Routes/quoteRoutes.js";
 
@@ -23,7 +25,9 @@ const corsOptions = {
     if (!origin || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
-    return callback(new Error("Not allowed by CORS"));
+    const err = new Error("Not allowed by CORS");
+    err.status = 403;
+    return callback(err);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE"],
@@ -40,6 +44,28 @@ app.get("/", (_req, res) => {
   res.send("Marine API is running!");
 });
 
+app.get("/api/docs.json", (_req, res) => {
+  res.json(openApiSpec);
+});
+app.use(
+  "/api/docs",
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        "script-src": ["'self'", "'unsafe-inline'"],
+        "style-src": ["'self'", "'unsafe-inline'", "https:"],
+        "img-src": ["'self'", "data:", "https:"],
+      },
+    },
+  }),
+  swaggerUi.serve,
+  swaggerUi.setup(openApiSpec, {
+    customSiteTitle: "Marine API — Docs",
+    swaggerOptions: { persistAuthorization: true },
+  })
+);
+
 app.use("/api/quote", quoteRoutes);
 app.use("/api/policy", policyRoutes);
 
@@ -48,6 +74,15 @@ app.use((_req, res) => {
 });
 
 app.use((err, _req, res, _next) => {
+  if (err?.type === "entity.too.large") {
+    return res.status(413).json({ error: "Payload too large" });
+  }
+  if (err?.type === "entity.parse.failed" || err instanceof SyntaxError) {
+    return res.status(400).json({ error: "Invalid JSON body" });
+  }
+  if (err?.status && err.status >= 400 && err.status < 500) {
+    return res.status(err.status).json({ error: err.message });
+  }
   console.error("Unhandled error:", err);
   res.status(500).json({ error: "Internal server error" });
 });
