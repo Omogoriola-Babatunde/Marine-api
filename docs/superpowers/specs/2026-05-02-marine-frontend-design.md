@@ -25,7 +25,7 @@ Build a small, single-user web frontend that exercises the Marine API's quote â†
 
 | Concern | Choice | Notes |
 |---|---|---|
-| Framework | Next.js 15 (App Router, React 19) | TypeScript |
+| Framework | Next.js 16 (App Router, React 19) | TypeScript |
 | Server state | TanStack Query v5 | + `@tanstack/query-sync-storage-persister` to `sessionStorage` |
 | UI components | shadcn/ui | Tailwind under the hood |
 | Forms | react-hook-form + zod | Zod schemas mirror backend `validateQuoteInput` / `validatePolicyInput` |

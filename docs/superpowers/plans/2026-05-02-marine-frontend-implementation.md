@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a standalone Next.js 15 frontend at `marine-frontend/` that exercises the Marine API's quote → policy → certificate flow end-to-end, with TanStack Query (sessionStorage-persisted), shadcn/ui, react-hook-form + zod for forms, and react-pdf for inline cert preview.
+**Goal:** Build a standalone Next.js 16 frontend at `marine-frontend/` that exercises the Marine API's quote → policy → certificate flow end-to-end, with TanStack Query (sessionStorage-persisted), shadcn/ui, react-hook-form + zod for forms, and react-pdf for inline cert preview.
 
 **Architecture:** Two pages (`/`, `/quotes/[id]`) backed by three Route Handler proxies. The browser never sees the backend URL; all API traffic flows through Next.js handlers reading `API_URL` server-side. The created quote lives in TanStack Query cache (key `['quote', id]`) with `sessionStorage` persistence so refresh-within-tab works. The PDF is the shareable artifact — the web URL is intentionally single-tab/single-session.
 
-**Tech Stack:** Next.js 15 (App Router, React 19, TypeScript), TanStack Query v5 + `@tanstack/react-query-persist-client`, shadcn/ui (Tailwind), react-hook-form + zod, react-pdf (pdfjs-dist), biome, pnpm, Vitest, Playwright + msw.
+**Tech Stack:** Next.js 16 (App Router, React 19, TypeScript), TanStack Query v5 + `@tanstack/react-query-persist-client`, shadcn/ui (Tailwind), react-hook-form + zod, react-pdf (pdfjs-dist), biome, pnpm, Vitest, Playwright + msw.
 
 **Spec reference:** `docs/superpowers/specs/2026-05-02-marine-frontend-design.md`. Read it before starting — every architectural decision is documented there.
 
@@ -38,7 +38,7 @@ pnpm create next-app@latest marine-frontend \
 
 Answer "No" to "Would you like to use Turbopack" if asked separately. We don't need it for this project size.
 
-Expected: a `marine-frontend/` directory exists with a Next.js 15 + TS + Tailwind scaffold.
+Expected: a `marine-frontend/` directory exists with a Next.js 16 + TS + Tailwind scaffold.
 
 - [ ] **Step 2: Replace ESLint with biome**
 
@@ -147,7 +147,7 @@ Expected: server starts on `http://localhost:3000`. Open it, see the default Nex
 Run from repo root:
 ```bash
 git add marine-frontend/
-git commit -m "feat(frontend): scaffold Next.js 15 + biome + Tailwind"
+git commit -m "feat(frontend): scaffold Next.js 16 + biome + Tailwind"
 ```
 
 ---
@@ -2161,14 +2161,14 @@ Create `marine-frontend/README.md`:
 ```markdown
 # Marine Frontend
 
-Next.js 15 frontend for the Marine Cargo Insurance API. Two pages:
+Next.js 16 frontend for the Marine Cargo Insurance API. Two pages:
 
 - `/` — quote form
 - `/quotes/[id]` — quote details, policy issuance, and inline PDF cert preview
 
 ## Stack
 
-Next.js 15 (App Router) · TypeScript · TanStack Query v5 (sessionStorage-persisted) · shadcn/ui · react-hook-form + zod · react-pdf · biome · pnpm.
+Next.js 16 (App Router) · TypeScript · TanStack Query v5 (sessionStorage-persisted) · shadcn/ui · react-hook-form + zod · react-pdf · biome · pnpm.
 
 ## Architecture
 
