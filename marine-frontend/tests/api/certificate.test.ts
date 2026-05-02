@@ -12,13 +12,15 @@ describe("GET /api/policy/certificate/:policyNumber (proxy)", () => {
     vi.restoreAllMocks();
   });
 
-  it("streams the PDF and preserves content-type and content-disposition", async () => {
+  it("streams the PDF, preserves content-type, and forces inline disposition", async () => {
     const fakePdfBytes = new Uint8Array([0x25, 0x50, 0x44, 0x46]); // "%PDF"
     global.fetch = vi.fn().mockResolvedValue(
       new Response(fakePdfBytes, {
         status: 200,
         headers: {
           "content-type": "application/pdf",
+          // Backend sets attachment; the proxy must override to inline so an
+          // <iframe> preview can render it instead of triggering a download.
           "content-disposition": 'attachment; filename="certificate-POL-1.pdf"',
         },
       })
@@ -31,9 +33,7 @@ describe("GET /api/policy/certificate/:policyNumber (proxy)", () => {
 
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toBe("application/pdf");
-    expect(res.headers.get("content-disposition")).toBe(
-      'attachment; filename="certificate-POL-1.pdf"'
-    );
+    expect(res.headers.get("content-disposition")).toBe("inline");
 
     const buf = new Uint8Array(await res.arrayBuffer());
     expect(buf).toEqual(fakePdfBytes);

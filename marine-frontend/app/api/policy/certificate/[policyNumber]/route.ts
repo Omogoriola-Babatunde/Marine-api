@@ -9,11 +9,13 @@ export async function GET(
     `${env.API_URL}/api/policy/certificate/${encodeURIComponent(policyNumber)}`
   );
 
+  // Force inline disposition so the cert renders in <iframe> previews. The
+  // download anchor sets `download="<filename>"` to control the saved name —
+  // it does not need a backend Content-Disposition header for that.
   const headers = new Headers();
   const ct = upstream.headers.get("content-type");
-  const cd = upstream.headers.get("content-disposition");
   if (ct) headers.set("content-type", ct);
-  if (cd) headers.set("content-disposition", cd);
+  headers.set("content-disposition", "inline");
 
   return new Response(upstream.body, {
     status: upstream.status,

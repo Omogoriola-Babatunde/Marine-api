@@ -14,6 +14,7 @@ export function PolicyIssued({ policy }: { policy: Policy }) {
   }, []);
 
   const certHref = `/api/policy/certificate/${encodeURIComponent(policy.policyNumber)}`;
+  const certFilename = `certificate-${policy.policyNumber}.pdf`;
 
   return (
     <div className="space-y-6">
@@ -36,7 +37,7 @@ export function PolicyIssued({ policy }: { policy: Policy }) {
       <div className="space-y-3">
         <CertificatePreview policyNumber={policy.policyNumber} />
         <Button asChild>
-          <a href={certHref} download>
+          <a href={certHref} download={certFilename}>
             Download certificate
           </a>
         </Button>

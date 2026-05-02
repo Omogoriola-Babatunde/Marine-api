@@ -40,9 +40,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# PDF worker is copied from node_modules at install time
-public/pdf.worker.min.mjs
-
 # Test artifacts
 /test-results
 /playwright-report
