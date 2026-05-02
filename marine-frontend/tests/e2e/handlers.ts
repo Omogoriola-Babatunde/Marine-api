@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { http, HttpResponse } from "msw";
+import { HttpResponse, http } from "msw";
 import { FIXTURE_POLICY, FIXTURE_QUOTE } from "./fixtures";
 
 const certBytes = readFileSync(join(process.cwd(), "tests/e2e/cert-fixture.pdf"));

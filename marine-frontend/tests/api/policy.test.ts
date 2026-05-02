@@ -41,9 +41,11 @@ describe("POST /api/policy (proxy)", () => {
   });
 
   it("propagates 404 from backend (quote not found)", async () => {
-    global.fetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ error: "Quote not found" }), { status: 404 })
-    );
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(JSON.stringify({ error: "Quote not found" }), { status: 404 })
+      );
 
     const { POST } = await import("@/app/api/policy/route");
     const req = new Request("http://localhost:3000/api/policy", {

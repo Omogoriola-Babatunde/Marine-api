@@ -67,8 +67,8 @@ describe("issuePolicySchema", () => {
   });
 
   it("rejects customername > 100 chars", () => {
-    expect(
-      issuePolicySchema.safeParse({ ...valid, customername: "x".repeat(101) }).success
-    ).toBe(false);
+    expect(issuePolicySchema.safeParse({ ...valid, customername: "x".repeat(101) }).success).toBe(
+      false
+    );
   });
 });

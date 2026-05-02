@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Marine Frontend
 
-## Getting Started
+Next.js 16 frontend for the Marine Cargo Insurance API. Two pages:
 
-First, run the development server:
+- `/` — quote form
+- `/quotes/[id]` — quote details, policy issuance, and inline PDF cert preview
+
+## Stack
+
+Next.js 16 (App Router) · TypeScript · TanStack Query v5 (sessionStorage-persisted) · shadcn/ui · react-hook-form + zod · react-pdf · biome · pnpm.
+
+## Architecture
+
+The browser only ever talks to the same-origin Next.js Route Handlers under `/api/*`. Each handler proxies to the backend at `process.env.API_URL` (server-only). No CORS, no public env vars, no backend URL leaked to the client.
+
+The quote that's just been created lives in TanStack Query's cache (`['quote', id]`) with `sessionStorage` persistence — refresh-within-tab works; sharing the URL across tabs/devices does not. The PDF certificate is the durable shareable artifact.
+
+See `../docs/superpowers/specs/2026-05-02-marine-frontend-design.md` for the full design.
+
+## Local development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install                                  # also runs the pdf.js worker copy script
+echo "API_URL=http://localhost:4000" > .env.local
+pnpm dev                                       # frontend on :3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+In another terminal, run the backend:
+```bash
+cd ../marine-api
+PORT=4000 pnpm start
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+To target Railway prod instead:
+```bash
+echo "API_URL=https://marine-api-production.up.railway.app" > .env.local
+pnpm dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Scripts
 
-## Learn More
+| Script | Purpose |
+|---|---|
+| `pnpm dev` | Next.js dev server on :3000 |
+| `pnpm build && pnpm start` | Production build + serve |
+| `pnpm lint` | biome check |
+| `pnpm format` | biome format --write |
+| `pnpm test` | Vitest unit tests (zod schemas + Route Handlers) |
+| `pnpm test:watch` | Vitest watch mode |
+| `pnpm e2e` | Playwright happy-path E2E (msw-mocked backend) |
 
-To learn more about Next.js, take a look at the following resources:
+## Deployment (Vercel)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Set `API_URL` in the project's environment variables to the live backend URL. No other config required — Route Handlers run on Vercel's Node runtime by default.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Design constraints
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **No gradients.** Solid surfaces only. Use shadcn's CSS-variable color tokens (`bg-background`, `text-foreground`, `border`, `text-muted-foreground`) instead of hard-coded hex values.
+- **Dark + light, default = system.** Powered by `next-themes`. Both modes must look correct; do not assume a single theme.
+- **Geist font.** Loaded via `next/font/google` and exposed as `--font-sans` / `--font-mono` for Tailwind.

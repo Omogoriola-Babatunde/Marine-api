@@ -8,8 +8,8 @@ export function EmptyState() {
       <CardHeader>
         <CardTitle>Quote not found in this session</CardTitle>
         <CardDescription>
-          Quotes are kept in your browser tab while you issue a policy. If you opened this URL
-          fresh or closed the tab earlier, we don't have it anymore.
+          Quotes are kept in your browser tab while you issue a policy. If you opened this URL fresh
+          or closed the tab earlier, we don't have it anymore.
         </CardDescription>
       </CardHeader>
       <CardContent>

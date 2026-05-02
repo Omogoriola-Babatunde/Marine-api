@@ -44,9 +44,9 @@ describe("POST /api/quote (proxy)", () => {
 
   it("propagates 4xx body and status from backend", async () => {
     const errBody = { errors: ["classType must be A, B, or C"] };
-    global.fetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify(errBody), { status: 400 })
-    );
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify(errBody), { status: 400 }));
 
     const { POST } = await import("@/app/api/quote/route");
     const req = new Request("http://localhost:3000/api/quote", {

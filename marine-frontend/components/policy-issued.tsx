@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { CertificatePreview } from "@/components/certificate-preview";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CertificatePreview } from "@/components/certificate-preview";
 import type { Policy } from "@/lib/types";
 
 export function PolicyIssued({ policy }: { policy: Policy }) {

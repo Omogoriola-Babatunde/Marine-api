@@ -38,9 +38,7 @@ describe("GET /api/policy/certificate/:policyNumber (proxy)", () => {
     const buf = new Uint8Array(await res.arrayBuffer());
     expect(buf).toEqual(fakePdfBytes);
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      "http://api.test/api/policy/certificate/POL-1"
-    );
+    expect(global.fetch).toHaveBeenCalledWith("http://api.test/api/policy/certificate/POL-1");
   });
 
   it("propagates 404 when backend can't find the cert", async () => {

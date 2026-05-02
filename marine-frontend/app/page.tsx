@@ -6,8 +6,7 @@ export default function HomePage() {
       <header>
         <h1 className="text-2xl font-semibold">Get a marine cargo quote</h1>
         <p className="text-muted-foreground">
-          Fill in the cargo details to see your premium. You can issue a policy on the next
-          step.
+          Fill in the cargo details to see your premium. You can issue a policy on the next step.
         </p>
       </header>
       <QuoteForm />

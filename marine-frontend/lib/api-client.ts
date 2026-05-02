@@ -24,8 +24,7 @@ async function parseError(res: Response): Promise<ApiError> {
   } catch {
     // non-JSON body
   }
-  const message =
-    body?.errors?.[0] ?? body?.error ?? `Request failed with status ${res.status}`;
+  const message = body?.errors?.[0] ?? body?.error ?? `Request failed with status ${res.status}`;
   return new ApiError(message, res.status, body?.errors);
 }
 

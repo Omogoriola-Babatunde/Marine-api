@@ -8,11 +8,7 @@ import { QuoteSummary } from "@/components/quote-summary";
 import { useQuote } from "@/hooks/use-quote";
 import type { Policy } from "@/lib/types";
 
-export default function QuoteDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function QuoteDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { data: quote } = useQuote(id);
   const [policy, setPolicy] = useState<Policy | null>(null);
