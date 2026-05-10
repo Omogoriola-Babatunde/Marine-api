@@ -3,6 +3,7 @@ import app from "./src/app.js";
 import { disconnectPrisma } from "./src/config/db.js";
 import { closeBrowserPool } from "./src/utils/browserPool.js";
 
+
 const PORT = process.env.PORT || 4000;
 
 const server = app.listen(PORT, () => {

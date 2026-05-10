@@ -1,6 +1,7 @@
 import { getPrismaClient } from "../config/db.js";
 import { calculatePremium } from "../Services/quotesServices.js";
 import { validateQuoteInput } from "../utils/validation.js";
+import { transporter } from "../utils/mailer.js";
 
 const prisma = getPrismaClient();
 export const createQuotes = async (req, res) => {
@@ -27,6 +28,7 @@ export const createQuotes = async (req, res) => {
         origin,
         destination,
         premium,
+        status: "PENDING",
       },
     });
     res.json(quote);
@@ -35,6 +37,16 @@ export const createQuotes = async (req, res) => {
     res.status(500).json({ error: "Failed to create quote" });
   }
 };
+
+await transporter.sendMail({
+  from: process.env.EMAIL_USER,
+  to: "admincompany@gmail.com",
+  subject: "New Quote Request",
+  text: `A new quote has been created with the following details:\n\n
+  Cargo Type: ${cargoType}
+  Premium: ${premium}
+  Please review and approve or reject the quote in the admin panel.`,
+});
 
 export const getQuotes = async (req, res) => {
   try {
@@ -65,3 +77,48 @@ export const getQuotes = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch quotes" });
   }
 };
+
+export const approveQuote = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const quote = await prisma.quote.update({ 
+      where: { id: parseInt(id) },
+      data:{
+        status: "APPROVED",
+      },
+    });
+    res.json(quote);
+      } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to approve quote" });
+  }
+    };
+
+    export const getpendingQuotes = async (req, res) => {
+      try {
+        const pendingQuotes = await prisma.quote.findMany({
+          where: { status: "PENDING" },
+          orderBy: { createdAt: "desc" },
+        });
+        res.json(quotes);
+      } catch (error) {
+        console.error("getpendingQuotes error:", error);
+        res.status(500).json({ error: "Failed to fetch pending quotes" });      
+      }
+    };
+
+    export const rejectQuote = async (req, res) => {
+      try {
+        const { id } = req.params;
+        const quote = await prisma.quote.update({
+          where: { id: parseInt(id) },
+          data: {
+            status: "REJECTED",
+          },
+        });
+        res.json(quote);
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to reject quote" });
+      }
+    };

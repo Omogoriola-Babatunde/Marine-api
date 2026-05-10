@@ -1,3 +1,4 @@
+
 import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -8,13 +9,20 @@ import { validatePolicyInput } from "../utils/validation.js";
 
 const prisma = getPrismaClient();
 
+const quote = await prisma.quote.findUnique({
+  where: { id: quoteId },
+});         
+ if (quote.status !== "APPROVED") {
+      return res.status(400).json({ error: "Quote must be approved before creating a policy" });
+    }
+
 const POLICY_NUMBER_RE = /^POL-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const createPolicy = async (req, res) => {
   try {
-    const { quoteId, customername } = req.body;
+    const { quoteId, customerName } = req.body;
 
-    const validation = validatePolicyInput({ quoteId, customername });
+    const validation = validatePolicyInput({ quoteId, customerName });
     if (!validation.valid) {
       return res.status(400).json({ errors: validation.errors });
     }
@@ -31,7 +39,7 @@ export const createPolicy = async (req, res) => {
       data: {
         policyNumber,
         quoteId,
-        customername,
+        customerName,
         status: "active",
       },
     });
@@ -73,3 +81,4 @@ export const downloadCertificate = async (req, res) => {
     res.status(500).json({ error: "Failed to download certificate" });
   }
 };
+ 

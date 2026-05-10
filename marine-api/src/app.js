@@ -5,6 +5,7 @@ import swaggerUi from "swagger-ui-express";
 import { openApiSpec } from "./config/openapi.js";
 import policyRoutes from "./Routes/policyRoutes.js";
 import quoteRoutes from "./Routes/quoteRoutes.js";
+import authRoutes from "./Routes/authRoutes.js";
 
 const app = express();
 
@@ -68,6 +69,7 @@ app.use(
 
 app.use("/api/quote", quoteRoutes);
 app.use("/api/policy", policyRoutes);
+app.use("/api/auth", authRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: "Not found" });
@@ -86,5 +88,6 @@ app.use((err, _req, res, _next) => {
   console.error("Unhandled error:", err);
   res.status(500).json({ error: "Internal server error" });
 });
+
 
 export default app;

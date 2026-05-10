@@ -278,7 +278,7 @@ export const renderHtml = (policy, quote) => `<!DOCTYPE html>
           <div class="hd">Insured</div>
           <div class="field">
             <div class="k">Customer name</div>
-            <div class="v">${escapeHtml(policy.customername)}</div>
+            <div class="v">${escapeHtml(policy.customerName)}</div>
           </div>
           <div class="field">
             <div class="k">Quote reference</div>
