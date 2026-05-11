@@ -8,7 +8,7 @@ datasource db {
 }
 
 model Quote {
-  id          String   @id @default(uuid())
+  id          String      @id @default(uuid())
   classType   String
   cargoType   String
   cargoValue  Float
@@ -16,8 +16,10 @@ model Quote {
   destination String
   status      QuoteStatus @default(PENDING)
   premium     Float
-  createdAt   DateTime @default(now())
+  createdAt   DateTime    @default(now())
   policies    Policy[]
+  createdById String
+  createdBy   User        @relation(fields: [createdById], references: [id])
 
   @@index([createdAt])
 }
@@ -30,45 +32,49 @@ model Policy {
   customerName String
   status       String
   createdAt    DateTime @default(now())
+  issuedById   String
+  issuedBy     User     @relation(fields: [issuedById], references: [id])
 
   @@index([quoteId])
 }
 
 model User {
-  Id      String    @id @default(uuid())
-  username  String  @unique
-  email     String? 
-  password  String
-  role      Role
-  rate      Float
-  wallet    Float     @default(0)
-  createdAt DateTime  @default(now())
-  TR
+  id           String              @id @default(uuid())
+  username     String              @unique
+  email        String?
+  password     String
+  role         Role
+  rate         Float
+  wallet       Float               @default(0)
+  createdAt    DateTime            @default(now())
+  quotes       Quote[]
+  policies     Policy[]
+  transactions WalletTransaction[]
 }
 
-enum Role{
+enum Role {
   ADMIN
   STAFF
   USER
 }
 
-enum QuoteStatus{
-  PENDING 
-  APPROVED 
+enum QuoteStatus {
+  PENDING
+  APPROVED
   REJECTED
 }
 
-model WalletTransaction{
-  id      String @id @default(uuid())
-  userId  String
-  userId  User    @relation(fields:[userId], references: [id])
-  amount  Float
-  type    TransactionType
+model WalletTransaction {
+  id          String          @id @default(uuid())
+  userId      String
+  user        User            @relation(fields: [userId], references: [id])
+  amount      Float
+  type        TransactionType
   description String
-  createdAt  DateTime @default(now())
+  createdAt   DateTime        @default(now())
 }
 
-enum TransactionType{
+enum TransactionType {
   CREDIT
   DEBIT
 }

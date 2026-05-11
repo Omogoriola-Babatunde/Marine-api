@@ -41,6 +41,7 @@ export const createPolicy = async (req, res) => {
         quoteId,
         customerName,
         status: "active",
+        issuedById: req.user.userId,
       },
     });
     const certificatePath = await generateCertificate(policy, quote);
