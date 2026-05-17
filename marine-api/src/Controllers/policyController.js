@@ -6,15 +6,11 @@ import { getPrismaClient } from "../config/db.js";
 import { CERTIFICATE_DIR } from "../config/paths.js";
 import { generateCertificate } from "../Services/certificateService.js";
 import { validatePolicyInput } from "../utils/validation.js";
+import { createAuditLog } from "../utils/auditLogger.js";
 
 const prisma = getPrismaClient();
 
-const quote = await prisma.quote.findUnique({
-  where: { id: quoteId },
-});         
- if (quote.status !== "APPROVED") {
-      return res.status(400).json({ error: "Quote must be approved before creating a policy" });
-    }
+       
 
 const POLICY_NUMBER_RE = /^POL-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -26,7 +22,9 @@ export const createPolicy = async (req, res) => {
     if (!validation.valid) {
       return res.status(400).json({ errors: validation.errors });
     }
-
+ if (quote.status !== "APPROVED") {
+      return res.status(400).json({ error: "Quote must be approved before creating a policy" });
+    }
     const quote = await prisma.quote.findUnique({
       where: { id: quoteId },
     });
@@ -43,6 +41,11 @@ export const createPolicy = async (req, res) => {
         status: "active",
         issuedById: req.user.userId,
       },
+    });
+    await createAuditLog({
+      userId: req.user.userId,
+      action: "CREATE_POLICY",
+      details: ` Issued policy: ${policy.policyNumber} based on quote ID: ${quoteId}`,
     });
     const certificatePath = await generateCertificate(policy, quote);
 

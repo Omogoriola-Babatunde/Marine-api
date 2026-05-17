@@ -6,6 +6,8 @@ import { openApiSpec } from "./config/openapi.js";
 import policyRoutes from "./Routes/policyRoutes.js";
 import quoteRoutes from "./Routes/quoteRoutes.js";
 import authRoutes from "./Routes/authRoutes.js";
+import reportRoutes from "./Routes/reportRoutes.js";
+import auditRoutes from "./Routes/auditRoutes.js";
 
 const app = express();
 
@@ -70,7 +72,8 @@ app.use(
 app.use("/api/quote", quoteRoutes);
 app.use("/api/policy", policyRoutes);
 app.use("/api/auth", authRoutes);
-
+app.use("/api/reports", reportRoutes);
+app.use("/api/audit", auditRoutes);
 app.use((_req, res) => {
   res.status(404).json({ error: "Not found" });
 });

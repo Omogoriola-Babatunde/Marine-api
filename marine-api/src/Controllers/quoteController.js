@@ -2,6 +2,7 @@ import { getPrismaClient } from "../config/db.js";
 import { calculatePremium } from "../Services/quotesServices.js";
 import { validateQuoteInput } from "../utils/validation.js";
 import { transporter } from "../utils/mailer.js";
+import { createAuditLog } from "../utils/auditLogger.js";
 
 const prisma = getPrismaClient();
 export const createQuotes = async (req, res) => {
@@ -29,7 +30,13 @@ export const createQuotes = async (req, res) => {
         destination,
         premium,
         status: "PENDING",
+        createdById: req.user.userId,
       },
+    });
+    await createAuditLog({
+      userId: req.user.userId,
+      action: "CREATE_QUOTE",
+      details: ` Created a new quote with ID: ${quote.id}`,
     });
     res.json(quote);
   } catch (error) {
@@ -86,6 +93,11 @@ export const approveQuote = async (req, res) => {
       data:{
         status: "APPROVED",
       },
+    });
+    await createAuditLog({
+      userId: req.user.userId,
+      action: "APPROVE_QUOTE",
+      details: ` Approved quote with ID: ${quote.id}`,
     });
     res.json(quote);
       } catch (error) {

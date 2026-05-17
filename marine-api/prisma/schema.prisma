@@ -14,7 +14,7 @@ model Quote {
   cargoValue  Float
   origin      String
   destination String
-  status      QuoteStatus @default(PENDING)
+  status      QuoteStatus
   premium     Float
   createdAt   DateTime    @default(now())
   policies    Policy[]
@@ -30,6 +30,14 @@ model Policy {
   quoteId      String
   quote        Quote    @relation(fields: [quoteId], references: [id])
   customerName String
+  proformaInvoice String
+  mode          String
+  currency      String
+  InvoiceValue  String
+  exchangeRate   String
+  startDate     DateTime
+  endDate     DateTime
+  naicomId    String?
   status       String
   createdAt    DateTime @default(now())
   issuedById   String
@@ -44,12 +52,14 @@ model User {
   email        String?
   password     String
   role         Role
-  rate         Float
+  classARate   Float               @default(0)
+  classBRate   Float               @default(0)
   wallet       Float               @default(0)
   createdAt    DateTime            @default(now())
   quotes       Quote[]
   policies     Policy[]
   transactions WalletTransaction[]
+  AuditLog     AuditLog[]
 }
 
 enum Role {
@@ -58,8 +68,8 @@ enum Role {
   USER
 }
 
-enum QuoteStatus {
-  PENDING
+enum PolicyStatus {
+  PENDING_APPROVAL
   APPROVED
   REJECTED
 }
@@ -77,4 +87,20 @@ model WalletTransaction {
 enum TransactionType {
   CREDIT
   DEBIT
+}
+
+model AuditLog{
+  id String @id @default(uuid())
+  userId String 
+  user User @relation(fields: [userId], references: [id])
+  action String 
+  description String 
+  createdAt DateTime @default(now())
+}
+
+
+enum QuoteStatus {
+  GENERATED
+  CONVERTED
+  EXPIRED
 }

@@ -5,13 +5,14 @@ import { adminOnly } from "../middleware/adminOnly.js";
 import { approveQuote } from "../Controllers/quoteController.js";
 import { getpendingQuotes } from "../Controllers/quoteController.js";
 import { rejectQuote } from "../Controllers/quoteController.js";
+import { authorizeRoles } from "../middleware/roles.js";
 
 const router = express.Router();
 
-router.post("/", createQuotes);
+router.post("/",authenticateToken,authorizeRoles("ADMIN", "STAFF", "USER"), createQuotes);
 router.get("/", getQuotes);
-router.patch("/approve/:id", authenticateToken, adminOnly, approveQuote);
-router.get("/pending", authenticateToken, adminOnly, getpendingQuotes);
-router.patch("/reject/:id", authenticateToken, adminOnly, rejectQuote);
+router.patch("/approve/:id", authenticateToken, authorizeRoles("ADMIN"), approveQuote);
+router.get("/pending", authenticateToken, authorizeRoles("ADMIN"), getpendingQuotes);
+router.patch("/reject/:id", authenticateToken, authorizeRoles("ADMIN"), rejectQuote);
 
 export default router;

@@ -1,5 +1,5 @@
 import exceljs from 'exceljs';
-import { getPrismaClient } from '../prismaClient.js';
+import { getPrismaClient } from '../config/db.js';
 
 const prisma = getPrismaClient();
 
