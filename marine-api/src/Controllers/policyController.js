@@ -7,6 +7,7 @@ import { CERTIFICATE_DIR } from "../config/paths.js";
 import { generateCertificate } from "../Services/certificateService.js";
 import { validatePolicyInput } from "../utils/validation.js";
 import { createAuditLog } from "../utils/auditLogger.js";
+import { createNotification } from "../utils/notification.js";
 
 const prisma = getPrismaClient();
 
@@ -22,9 +23,6 @@ export const createPolicy = async (req, res) => {
     if (!validation.valid) {
       return res.status(400).json({ errors: validation.errors });
     }
- if (quote.status !== "APPROVED") {
-      return res.status(400).json({ error: "Quote must be approved before creating a policy" });
-    }
     const quote = await prisma.quote.findUnique({
       where: { id: quoteId },
     });
@@ -38,51 +36,116 @@ export const createPolicy = async (req, res) => {
         policyNumber,
         quoteId,
         customerName,
-        status: "active",
+        status: "PENDING_APPROVAL",
         issuedById: req.user.userId,
       },
     });
+
+    await prisma.quote.update({
+      where: { id: quoteId },
+      data: { status: "CONVERTED" },
+    });
+
     await createAuditLog({
       userId: req.user.userId,
       action: "CREATE_POLICY",
-      details: ` Issued policy: ${policy.policyNumber} based on quote ID: ${quoteId}`,
+      description: `Issued policy: ${policy.policyNumber} from quote ${quoteId}`,
     });
-    const certificatePath = await generateCertificate(policy, quote);
-
-    res.json({ policy, certificatePath });
+    res.json({message: "Policy submitted for approval", policy,});
   } catch (error) {
     console.error("createPolicy error:", error);
     res.status(500).json({ error: "Failed to create policy" });
   }
 };
-
-export const downloadCertificate = async (req, res) => {
+   
+export const approvePolicy = async (req, res) => {  
   try {
-    const { policyNumber } = req.params;
-
-    if (!policyNumber || !POLICY_NUMBER_RE.test(policyNumber)) {
-      return res.status(400).json({ error: "Invalid policy number format" });
+    const { id } = req.params;
+    const policy = await prisma.policy.findUnique({
+      where: { id },
+      include: { quote: true, issuedBy: true },
+    });
+    if (!policy) {
+      return res.status(404).json({ error: "Policy not found" });
+}
+    if (policy.status !== "PENDING_APPROVAL") {
+      return res.status(400).json({ error: "Policy already processed" });
     }
-
-    const fileName = `certificate-${policyNumber}.pdf`;
-    const filePath = path.join(CERTIFICATE_DIR, fileName);
-    const normalizedPath = path.normalize(filePath);
-
-    const rel = path.relative(CERTIFICATE_DIR, normalizedPath);
-    if (rel.startsWith("..") || path.isAbsolute(rel)) {
-      return res.status(403).json({ error: "Access denied" });
+    if (policy.issuedBy.wallet < policy.quote.premium) {
+      return res.status(400).json({ error: "Insufficient wallet balance" });
     }
+    //debit the issuer's wallet
+    await prisma.user.update({
+      where: { 
+        id:policy.issuedById, 
+      },
+      data: { 
+        wallet: {
+          decrement: policy.quote.premium,
+        },
+       },
+    });
+     
+    await prisma.walletTransaction.create({
+      data: {
+        userId: policy.issuedById,
+        amount: policy.quote.premium,
+        type: "DEBIT",
+        description: `Debit for policy ${policy.policyNumber}`,
+      },
+    });
 
-    try {
-      await fs.access(normalizedPath);
-    } catch {
-      return res.status(404).json({ error: "Certificate not found" });
-    }
+      //approve the policy
+    const updatedPolicy = await prisma.policy.update({
+      where: { id },
+      data: { status: "APPROVED" }
+    });
+//generate certificate 
+    const certificatePath = await generateCertificate(updatedPolicy, policy.quote);
 
-    res.download(normalizedPath, fileName);
+    await createNotification({
+      userId: policy.issuedById,
+      title: "Policy Approved",
+      message: `Policy ${policy.policyNumber} has been approved.`,
+    });
+// audit log
+    await createAuditLog({
+      userId: req.user.userId,
+      action: "APPROVE_POLICY",
+      description: `Approved policy: ${updatedPolicy.policyNumber}`,
+    });
+    res.json({ message: "Policy approved", policy: updatedPolicy, certificatePath }); 
+
   } catch (error) {
-    console.error("downloadCertificate error:", error);
-    res.status(500).json({ error: "Failed to download certificate" });
+    console.error("approvePolicy error:", error);
+    res.status(500).json({ error: "Failed to approve policy" });
   }
 };
- 
+
+export const rejectPolicy = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const policy = await prisma.policy.update({
+      where: { id },
+      data: { status: "REJECTED" },
+    });
+    res.json({ message: "Policy rejected", policy });
+  } catch (error) {
+    console.error("rejectPolicy error:", error);
+    res.status(500).json({ error: "Failed to reject policy" });
+  }
+};
+
+export const getpendingPolicies = async (req, res) => {
+  try {
+    const policies = await prisma.policy.findMany({
+      where: { status: "PENDING_APPROVAL" },
+      include: { quote: true, issuedBy: true },
+      orderBy: { createdAt: "desc" },
+    });
+    res.json(policies);
+  } catch (error) {
+    console.error("getpendingPolicies error:", error);
+    res.status(500).json({ error: "Failed to fetch pending policies" });
+  }
+};
