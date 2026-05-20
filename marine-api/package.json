@@ -6,6 +6,7 @@
   "scripts": {
     "start": "prisma migrate deploy && node server.js",
     "dev": "node --watch server.js",
+    "test": "node --test 'test/**/*.test.js'",
     "lint": "biome lint .",
     "format": "biome format --write .",
     "check": "biome check --write .",
@@ -37,6 +38,7 @@
     "dotenv": "^17.4.2",
     "exceljs": "^4.4.0",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
     "nodemailer": "^8.0.7",
