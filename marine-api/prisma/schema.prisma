@@ -25,23 +25,23 @@ model Quote {
 }
 
 model Policy {
-  id           String   @id @default(uuid())
-  policyNumber String   @unique
-  quoteId      String
-  quote        Quote    @relation(fields: [quoteId], references: [id])
-  customerName String
-  proformaInvoice String
-  mode          String
-  currency      String
-  InvoiceValue  String
-  exchangeRate   String
-  startDate     DateTime
-  endDate     DateTime
-  naicomId    String?
-  status       String
-  createdAt    DateTime @default(now())
-  issuedById   String
-  issuedBy     User     @relation(fields: [issuedById], references: [id])
+  id              String    @id @default(uuid())
+  policyNumber    String    @unique
+  quoteId         String
+  quote           Quote     @relation(fields: [quoteId], references: [id])
+  customerName    String
+  proformaInvoice String?
+  mode            String?
+  currency        String?
+  invoiceValue    Float?
+  exchangeRate    Float?
+  startDate       DateTime?
+  endDate         DateTime?
+  naicomId        String?
+  status          String
+  createdAt       DateTime  @default(now())
+  issuedById      String
+  issuedBy        User      @relation(fields: [issuedById], references: [id])
 
   @@index([quoteId])
 }
