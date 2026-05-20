@@ -3,11 +3,11 @@ import express from "express";
 import helmet from "helmet";
 import swaggerUi from "swagger-ui-express";
 import { openApiSpec } from "./config/openapi.js";
+import auditRoutes from "./Routes/auditRoutes.js";
+import authRoutes from "./Routes/authRoutes.js";
 import policyRoutes from "./Routes/policyRoutes.js";
 import quoteRoutes from "./Routes/quoteRoutes.js";
-import authRoutes from "./Routes/authRoutes.js";
 import reportRoutes from "./Routes/reportRoutes.js";
-import auditRoutes from "./Routes/auditRoutes.js";
 
 const app = express();
 
@@ -91,6 +91,5 @@ app.use((err, _req, res, _next) => {
   console.error("Unhandled error:", err);
   res.status(500).json({ error: "Internal server error" });
 });
-
 
 export default app;
