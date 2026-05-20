@@ -1,10 +1,11 @@
 import { getPrismaClient } from "../config/db.js";
 import { calculatePremium } from "../Services/quotesServices.js";
-import { validateQuoteInput } from "../utils/validation.js";
-import { transporter } from "../utils/mailer.js";
 import { createAuditLog } from "../utils/auditLogger.js";
+import { sendMail } from "../utils/mailer.js";
+import { isUuid, validateQuoteInput } from "../utils/validation.js";
 
 const prisma = getPrismaClient();
+
 export const createQuotes = async (req, res) => {
   try {
     const { classType, cargoType, cargoValue, origin, destination } = req.body;
@@ -29,31 +30,35 @@ export const createQuotes = async (req, res) => {
         origin,
         destination,
         premium,
-        status: "PENDING",
+        status: "GENERATED",
         createdById: req.user.userId,
       },
     });
+
     await createAuditLog({
       userId: req.user.userId,
       action: "CREATE_QUOTE",
-      details: ` Created a new quote with ID: ${quote.id}`,
+      description: `Created quote ${quote.id}`,
     });
-    res.json(quote);
+
+    if (process.env.ADMIN_NOTIFY_EMAIL) {
+      sendMail({
+        to: process.env.ADMIN_NOTIFY_EMAIL,
+        subject: "New Quote Request",
+        text:
+          `A new quote has been created.\n\n` +
+          `Cargo Type: ${cargoType}\n` +
+          `Premium: ${premium}\n` +
+          `Please review and approve or reject the quote in the admin panel.`,
+      }).catch((err) => console.error("[createQuotes] sendMail failed:", err));
+    }
+
+    res.status(201).json(quote);
   } catch (error) {
     console.error("createQuotes error:", error);
     res.status(500).json({ error: "Failed to create quote" });
   }
 };
-
-await transporter.sendMail({
-  from: process.env.EMAIL_USER,
-  to: "admincompany@gmail.com",
-  subject: "New Quote Request",
-  text: `A new quote has been created with the following details:\n\n
-  Cargo Type: ${cargoType}
-  Premium: ${premium}
-  Please review and approve or reject the quote in the admin panel.`,
-});
 
 export const getQuotes = async (req, res) => {
   try {
@@ -88,49 +93,65 @@ export const getQuotes = async (req, res) => {
 export const approveQuote = async (req, res) => {
   try {
     const { id } = req.params;
-    const quote = await prisma.quote.update({ 
-      where: { id: parseInt(id) },
-      data:{
-        status: "APPROVED",
-      },
-    });
+    if (!isUuid(id)) {
+      return res.status(400).json({ error: "Invalid quote id" });
+    }
+
+    const quote = await prisma.quote.findUnique({ where: { id } });
+    if (!quote) {
+      return res.status(404).json({ error: "Quote not found" });
+    }
+    if (quote.status !== "GENERATED") {
+      return res.status(400).json({ error: `Quote is ${quote.status} and cannot be approved` });
+    }
+
     await createAuditLog({
       userId: req.user.userId,
       action: "APPROVE_QUOTE",
-      details: ` Approved quote with ID: ${quote.id}`,
+      description: `Approved quote ${quote.id}`,
     });
+
     res.json(quote);
-      } catch (error) {
-    console.error(error);
+  } catch (error) {
+    console.error("approveQuote error:", error);
     res.status(500).json({ error: "Failed to approve quote" });
   }
-    };
+};
 
-    export const getpendingQuotes = async (req, res) => {
-      try {
-        const pendingQuotes = await prisma.quote.findMany({
-          where: { status: "PENDING" },
-          orderBy: { createdAt: "desc" },
-        });
-        res.json(quotes);
-      } catch (error) {
-        console.error("getpendingQuotes error:", error);
-        res.status(500).json({ error: "Failed to fetch pending quotes" });      
-      }
-    };
+export const getpendingQuotes = async (_req, res) => {
+  try {
+    const pendingQuotes = await prisma.quote.findMany({
+      where: { status: "GENERATED" },
+      orderBy: { createdAt: "desc" },
+    });
+    res.json(pendingQuotes);
+  } catch (error) {
+    console.error("getpendingQuotes error:", error);
+    res.status(500).json({ error: "Failed to fetch pending quotes" });
+  }
+};
 
-    export const rejectQuote = async (req, res) => {
-      try {
-        const { id } = req.params;
-        const quote = await prisma.quote.update({
-          where: { id: parseInt(id) },
-          data: {
-            status: "REJECTED",
-          },
-        });
-        res.json(quote);
-      } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Failed to reject quote" });
-      }
-    };
+export const rejectQuote = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!isUuid(id)) {
+      return res.status(400).json({ error: "Invalid quote id" });
+    }
+
+    const quote = await prisma.quote.update({
+      where: { id },
+      data: { status: "EXPIRED" },
+    });
+
+    await createAuditLog({
+      userId: req.user.userId,
+      action: "REJECT_QUOTE",
+      description: `Rejected quote ${quote.id}`,
+    });
+
+    res.json(quote);
+  } catch (error) {
+    console.error("rejectQuote error:", error);
+    res.status(500).json({ error: "Failed to reject quote" });
+  }
+};
