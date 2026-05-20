@@ -246,4 +246,49 @@ describe("smoke: OpenAPI docs", () => {
     assert.equal(status, 200);
     assert.ok(body.openapi || body.swagger);
   });
+
+  it("documents BearerAuth security scheme", async () => {
+    const { body } = await json("/api/docs.json");
+    assert.equal(body.components?.securitySchemes?.BearerAuth?.scheme, "bearer");
+  });
+
+  it("documents every new admin path", async () => {
+    const { body } = await json("/api/docs.json");
+    const required = [
+      "/api/auth/register",
+      "/api/auth/login",
+      "/api/auth/forgot-password",
+      "/api/quote/pending",
+      "/api/quote/approve/{id}",
+      "/api/quote/reject/{id}",
+      "/api/policy/pending",
+      "/api/policy/approve/{id}",
+      "/api/policy/reject/{id}",
+      "/api/policy/certificate/{policyNumber}",
+      "/api/reports/production",
+      "/api/audit",
+    ];
+    for (const p of required) {
+      assert.ok(body.paths?.[p], `OpenAPI spec is missing ${p}`);
+    }
+  });
+
+  it("protected paths declare BearerAuth", async () => {
+    const { body } = await json("/api/docs.json");
+    const protectedPaths = [
+      ["/api/quote", "post"],
+      ["/api/quote", "get"],
+      ["/api/policy", "post"],
+      ["/api/policy/approve/{id}", "patch"],
+      ["/api/reports/production", "get"],
+      ["/api/audit", "get"],
+    ];
+    for (const [p, method] of protectedPaths) {
+      const op = body.paths?.[p]?.[method];
+      assert.ok(
+        op?.security?.some((s) => s.BearerAuth),
+        `${method.toUpperCase()} ${p} should require BearerAuth`
+      );
+    }
+  });
 });
