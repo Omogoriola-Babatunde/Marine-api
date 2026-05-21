@@ -158,6 +158,43 @@ export const rejectPolicy = async (req, res) => {
   }
 };
 
+export const getPolicies = async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, parseInt(req.query.limit, 10) || 10);
+    const skip = (page - 1) * limit;
+
+    const status = req.query.status;
+    const allowed = ["PENDING_APPROVAL", "APPROVED", "REJECTED"];
+    if (status !== undefined && !allowed.includes(status)) {
+      return res.status(400).json({ error: `status must be one of ${allowed.join(", ")}` });
+    }
+    const where = status ? { status } : {};
+
+    const [policies, total] = await Promise.all([
+      prisma.policy.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          quote: true,
+          issuedBy: { select: { id: true, username: true, email: true, role: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.policy.count({ where }),
+    ]);
+
+    res.json({
+      data: policies,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+    });
+  } catch (error) {
+    console.error("getPolicies error:", error);
+    res.status(500).json({ error: "Failed to fetch policies" });
+  }
+};
+
 export const getpendingPolicies = async (_req, res) => {
   try {
     const policies = await prisma.policy.findMany({
@@ -174,6 +211,41 @@ export const getpendingPolicies = async (_req, res) => {
   } catch (error) {
     console.error("getpendingPolicies error:", error);
     res.status(500).json({ error: "Failed to fetch pending policies" });
+  }
+};
+
+export const getMyPolicies = async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, parseInt(req.query.limit, 10) || 10);
+    const skip = (page - 1) * limit;
+
+    const status = req.query.status;
+    const allowed = ["PENDING_APPROVAL", "APPROVED", "REJECTED"];
+    if (status !== undefined && !allowed.includes(status)) {
+      return res.status(400).json({ error: `status must be one of ${allowed.join(", ")}` });
+    }
+
+    const where = { issuedById: req.user.userId, ...(status ? { status } : {}) };
+
+    const [policies, total] = await Promise.all([
+      prisma.policy.findMany({
+        where,
+        skip,
+        take: limit,
+        include: { quote: true },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.policy.count({ where }),
+    ]);
+
+    res.json({
+      data: policies,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+    });
+  } catch (error) {
+    console.error("getMyPolicies error:", error);
+    res.status(500).json({ error: "Failed to fetch your policies" });
   }
 };
 

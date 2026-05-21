@@ -140,6 +140,14 @@ export const openApiSpec = {
         },
       },
 
+      PolicyList: {
+        type: "object",
+        properties: {
+          data: { type: "array", items: { $ref: "#/components/schemas/Policy" } },
+          pagination: { $ref: "#/components/schemas/Pagination" },
+        },
+      },
+
       Policy: {
         type: "object",
         properties: {
@@ -404,6 +412,11 @@ export const openApiSpec = {
             in: "query",
             schema: { type: "integer", minimum: 1, maximum: 100, default: 10 },
           },
+          {
+            name: "status",
+            in: "query",
+            schema: { type: "string", enum: ["GENERATED", "CONVERTED", "EXPIRED"] },
+          },
         ],
         responses: {
           200: {
@@ -414,6 +427,36 @@ export const openApiSpec = {
           },
           401: { $ref: "#/components/responses/Unauthorized" },
           403: { $ref: "#/components/responses/Forbidden" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
+    "/api/quote/mine": {
+      get: {
+        tags: ["Quote"],
+        summary: "List the authenticated user's own quotes (paginated)",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          { name: "page", in: "query", schema: { type: "integer", minimum: 1, default: 1 } },
+          {
+            name: "limit",
+            in: "query",
+            schema: { type: "integer", minimum: 1, maximum: 100, default: 10 },
+          },
+          {
+            name: "status",
+            in: "query",
+            schema: { type: "string", enum: ["GENERATED", "CONVERTED", "EXPIRED"] },
+          },
+        ],
+        responses: {
+          200: {
+            description: "Paginated list of your quotes",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/QuoteList" } },
+            },
+          },
+          401: { $ref: "#/components/responses/Unauthorized" },
           500: { $ref: "#/components/responses/ServerError" },
         },
       },
@@ -536,6 +579,72 @@ export const openApiSpec = {
           401: { $ref: "#/components/responses/Unauthorized" },
           403: { $ref: "#/components/responses/Forbidden" },
           404: { $ref: "#/components/responses/NotFound" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+      get: {
+        tags: ["Policy"],
+        summary: "List policies (paginated, ADMIN/STAFF)",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          { name: "page", in: "query", schema: { type: "integer", minimum: 1, default: 1 } },
+          {
+            name: "limit",
+            in: "query",
+            schema: { type: "integer", minimum: 1, maximum: 100, default: 10 },
+          },
+          {
+            name: "status",
+            in: "query",
+            schema: {
+              type: "string",
+              enum: ["PENDING_APPROVAL", "APPROVED", "REJECTED"],
+            },
+          },
+        ],
+        responses: {
+          200: {
+            description: "Paginated list",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/PolicyList" } },
+            },
+          },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          403: { $ref: "#/components/responses/Forbidden" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
+    "/api/policy/mine": {
+      get: {
+        tags: ["Policy"],
+        summary: "List the authenticated user's own policies (paginated)",
+        description: "Returns policies where the authenticated user is the issuer.",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          { name: "page", in: "query", schema: { type: "integer", minimum: 1, default: 1 } },
+          {
+            name: "limit",
+            in: "query",
+            schema: { type: "integer", minimum: 1, maximum: 100, default: 10 },
+          },
+          {
+            name: "status",
+            in: "query",
+            schema: {
+              type: "string",
+              enum: ["PENDING_APPROVAL", "APPROVED", "REJECTED"],
+            },
+          },
+        ],
+        responses: {
+          200: {
+            description: "Paginated list of your policies",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/PolicyList" } },
+            },
+          },
+          401: { $ref: "#/components/responses/Unauthorized" },
           500: { $ref: "#/components/responses/ServerError" },
         },
       },
@@ -736,6 +845,142 @@ export const openApiSpec = {
           },
           401: { $ref: "#/components/responses/Unauthorized" },
           403: { $ref: "#/components/responses/Forbidden" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
+
+    "/api/user": {
+      get: {
+        tags: ["User"],
+        summary: "List users (ADMIN, paginated)",
+        description: "Returns only id and email — no sensitive fields.",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          { name: "page", in: "query", schema: { type: "integer", minimum: 1, default: 1 } },
+          {
+            name: "limit",
+            in: "query",
+            schema: { type: "integer", minimum: 1, maximum: 100, default: 10 },
+          },
+        ],
+        responses: {
+          200: {
+            description: "Paginated list of users",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    data: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          id: { type: "string", format: "uuid" },
+                          email: { type: "string", nullable: true },
+                        },
+                      },
+                    },
+                    pagination: { $ref: "#/components/schemas/Pagination" },
+                  },
+                },
+              },
+            },
+          },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          403: { $ref: "#/components/responses/Forbidden" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
+
+    "/api/wallet/balance": {
+      get: {
+        tags: ["Wallet"],
+        summary: "Get the authenticated user's wallet balance",
+        security: [{ BearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Wallet info",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string", format: "uuid" },
+                    username: { type: "string" },
+                    wallet: { type: "number", format: "double" },
+                  },
+                },
+              },
+            },
+          },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
+    "/api/wallet/topup": {
+      post: {
+        tags: ["Wallet"],
+        summary: "Credit a user's wallet (ADMIN)",
+        description:
+          "Atomically increments the target user's wallet and inserts a CREDIT WalletTransaction.",
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["userId", "amount"],
+                properties: {
+                  userId: { type: "string", format: "uuid" },
+                  amount: { type: "number", format: "double", exclusiveMinimum: 0 },
+                  description: { type: "string", maxLength: 200 },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Wallet topped up",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: { type: "string" },
+                    user: {
+                      type: "object",
+                      properties: {
+                        id: { type: "string", format: "uuid" },
+                        username: { type: "string" },
+                        role: { type: "string" },
+                        wallet: { type: "number", format: "double" },
+                      },
+                    },
+                    transaction: {
+                      type: "object",
+                      properties: {
+                        id: { type: "string", format: "uuid" },
+                        amount: { type: "number", format: "double" },
+                        type: { type: "string", enum: ["CREDIT", "DEBIT"] },
+                        description: { type: "string" },
+                        createdAt: { type: "string", format: "date-time" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          400: { $ref: "#/components/responses/BadRequest" },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          403: { $ref: "#/components/responses/Forbidden" },
+          404: { $ref: "#/components/responses/NotFound" },
           500: { $ref: "#/components/responses/ServerError" },
         },
       },

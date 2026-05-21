@@ -8,6 +8,8 @@ import authRoutes from "./Routes/authRoutes.js";
 import policyRoutes from "./Routes/policyRoutes.js";
 import quoteRoutes from "./Routes/quoteRoutes.js";
 import reportRoutes from "./Routes/reportRoutes.js";
+import userRoutes from "./Routes/userRoutes.js";
+import walletRoutes from "./Routes/walletRoutes.js";
 
 const app = express();
 
@@ -74,6 +76,8 @@ app.use("/api/policy", policyRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/audit", auditRoutes);
+app.use("/api/wallet", walletRoutes);
+app.use("/api/user", userRoutes);
 app.use((_req, res) => {
   res.status(404).json({ error: "Not found" });
 });

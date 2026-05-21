@@ -66,23 +66,21 @@ export const getQuotes = async (req, res) => {
     const limit = Math.min(100, parseInt(req.query.limit, 10) || 10);
     const skip = (page - 1) * limit;
 
+    const status = req.query.status;
+    const allowed = ["GENERATED", "CONVERTED", "EXPIRED"];
+    if (status !== undefined && !allowed.includes(status)) {
+      return res.status(400).json({ error: `status must be one of ${allowed.join(", ")}` });
+    }
+    const where = status ? { status } : {};
+
     const [quotes, total] = await Promise.all([
-      prisma.quote.findMany({
-        skip,
-        take: limit,
-        orderBy: { createdAt: "desc" },
-      }),
-      prisma.quote.count(),
+      prisma.quote.findMany({ where, skip, take: limit, orderBy: { createdAt: "desc" } }),
+      prisma.quote.count({ where }),
     ]);
 
     res.json({
       data: quotes,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     });
   } catch (error) {
     console.error("getQuotes error:", error);
@@ -128,6 +126,35 @@ export const getpendingQuotes = async (_req, res) => {
   } catch (error) {
     console.error("getpendingQuotes error:", error);
     res.status(500).json({ error: "Failed to fetch pending quotes" });
+  }
+};
+
+export const getMyQuotes = async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, parseInt(req.query.limit, 10) || 10);
+    const skip = (page - 1) * limit;
+
+    const status = req.query.status;
+    const allowed = ["GENERATED", "CONVERTED", "EXPIRED"];
+    if (status !== undefined && !allowed.includes(status)) {
+      return res.status(400).json({ error: `status must be one of ${allowed.join(", ")}` });
+    }
+
+    const where = { createdById: req.user.userId, ...(status ? { status } : {}) };
+
+    const [quotes, total] = await Promise.all([
+      prisma.quote.findMany({ where, skip, take: limit, orderBy: { createdAt: "desc" } }),
+      prisma.quote.count({ where }),
+    ]);
+
+    res.json({
+      data: quotes,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+    });
+  } catch (error) {
+    console.error("getMyQuotes error:", error);
+    res.status(500).json({ error: "Failed to fetch your quotes" });
   }
 };
 
