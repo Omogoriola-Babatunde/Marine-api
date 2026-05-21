@@ -177,6 +177,25 @@ export const getpendingPolicies = async (_req, res) => {
   }
 };
 
+export const getapprovedPolicies = async (_req, res) => {
+  try {
+    const policies = await prisma.policy.findMany({
+      where: { status: "APPROVED" },
+      include: {
+        quote: true,
+        issuedBy: {
+          select: { id: true, username: true, email: true, role: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    res.json(policies);
+  } catch (error) {
+    console.error("getapprovedPolicies error:", error);
+    res.status(500).json({ error: "Failed to fetch approved policies" });
+  }
+};
+
 export const downloadCertificate = async (req, res) => {
   try {
     const { policyNumber } = req.params;
@@ -194,15 +213,32 @@ export const downloadCertificate = async (req, res) => {
       return res.status(403).json({ error: "Access denied" });
     }
 
+    let exists = true;
     try {
       await fs.access(normalizedPath);
     } catch {
-      return res.status(404).json({ error: "Certificate not found" });
+      exists = false;
+    }
+
+    if (!exists) {
+      const policy = await prisma.policy.findUnique({
+        where: { policyNumber },
+        include: { quote: true },
+      });
+      if (!policy) {
+        return res.status(404).json({ error: "Policy not found" });
+      }
+      if (policy.status !== "APPROVED") {
+        return res.status(400).json({
+          error: `Certificate is only available for APPROVED policies (current status: ${policy.status})`,
+        });
+      }
+      await generateCertificate(policy, policy.quote);
     }
 
     res.download(normalizedPath, fileName);
   } catch (error) {
     console.error("downloadCertificate error:", error);
-    res.status(500).json({ error: "Failed to download certificate" });
+    res.status(500).json({ error: "Failed to download certificate", detail: error.message });
   }
 };

@@ -438,6 +438,26 @@ export const openApiSpec = {
         },
       },
     },
+    "/api/quote/approved": {
+      get: {
+        tags: ["Quote"],
+        summary: "List approved (CONVERTED) quotes (ADMIN/STAFF)",
+        security: [{ BearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Array of approved quotes",
+            content: {
+              "application/json": {
+                schema: { type: "array", items: { $ref: "#/components/schemas/Quote" } },
+              },
+            },
+          },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          403: { $ref: "#/components/responses/Forbidden" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
     "/api/quote/approve/{id}": {
       patch: {
         tags: ["Quote"],
@@ -528,6 +548,26 @@ export const openApiSpec = {
         responses: {
           200: {
             description: "Array of pending policies",
+            content: {
+              "application/json": {
+                schema: { type: "array", items: { $ref: "#/components/schemas/Policy" } },
+              },
+            },
+          },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          403: { $ref: "#/components/responses/Forbidden" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
+    "/api/policy/approved": {
+      get: {
+        tags: ["Policy"],
+        summary: "List APPROVED policies (ADMIN/STAFF)",
+        security: [{ BearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Array of approved policies",
             content: {
               "application/json": {
                 schema: { type: "array", items: { $ref: "#/components/schemas/Policy" } },

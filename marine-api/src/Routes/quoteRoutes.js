@@ -2,6 +2,7 @@ import express from "express";
 import {
   approveQuote,
   createQuotes,
+  getapprovedQuotes,
   getpendingQuotes,
   getQuotes,
   rejectQuote,
@@ -14,6 +15,7 @@ const router = express.Router();
 router.post("/", authenticateToken, authorizeRoles("ADMIN", "STAFF", "USER"), createQuotes);
 router.get("/", authenticateToken, authorizeRoles("ADMIN", "STAFF"), getQuotes);
 router.get("/pending", authenticateToken, authorizeRoles("ADMIN"), getpendingQuotes);
+router.get("/approved", authenticateToken, authorizeRoles("ADMIN", "STAFF"), getapprovedQuotes);
 router.patch("/approve/:id", authenticateToken, authorizeRoles("ADMIN"), approveQuote);
 router.patch("/reject/:id", authenticateToken, authorizeRoles("ADMIN"), rejectQuote);
 

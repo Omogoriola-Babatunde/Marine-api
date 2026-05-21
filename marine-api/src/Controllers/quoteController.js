@@ -131,6 +131,19 @@ export const getpendingQuotes = async (_req, res) => {
   }
 };
 
+export const getapprovedQuotes = async (_req, res) => {
+  try {
+    const approvedQuotes = await prisma.quote.findMany({
+      where: { status: "CONVERTED" },
+      orderBy: { createdAt: "desc" },
+    });
+    res.json(approvedQuotes);
+  } catch (error) {
+    console.error("getapprovedQuotes error:", error);
+    res.status(500).json({ error: "Failed to fetch approved quotes" });
+  }
+};
+
 export const rejectQuote = async (req, res) => {
   try {
     const { id } = req.params;
