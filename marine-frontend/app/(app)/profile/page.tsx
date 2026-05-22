@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProfile } from "@/hooks/use-profile";
-import type { UserRole } from "@/lib/types";
+import type { AuthUser, UserRole } from "@/lib/types";
 
 const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 
@@ -17,24 +17,7 @@ const roleVariant: Record<UserRole, "default" | "secondary" | "outline"> = {
   USER: "outline",
 };
 
-function AccountSummaryCard() {
-  const { data: user, isLoading } = useProfile();
-
-  if (isLoading || !user) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Account</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <Skeleton className="h-5 w-48" />
-          <Skeleton className="h-5 w-64" />
-          <Skeleton className="h-5 w-24" />
-        </CardContent>
-      </Card>
-    );
-  }
-
+function AccountSummaryCard({ user }: { user: AuthUser }) {
   return (
     <Card>
       <CardHeader>
@@ -70,19 +53,41 @@ function AccountSummaryCard() {
 }
 
 export default function ProfilePage() {
-  const { data: user, isLoading } = useProfile();
+  const { data: user, isLoading, error, refetch } = useProfile();
 
   return (
     <>
       <SiteHeader title="Profile" />
       <div className="mx-auto w-full max-w-2xl space-y-6 px-4 py-6">
-        <AccountSummaryCard />
-        {isLoading || !user ? (
-          <Skeleton className="h-64 w-full" />
+        {error ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Couldn&apos;t load your profile</CardTitle>
+              <CardDescription>{error.message}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <button
+                type="button"
+                onClick={() => refetch()}
+                className="text-sm underline-offset-4 hover:underline"
+              >
+                Try again
+              </button>
+            </CardContent>
+          </Card>
+        ) : isLoading || !user ? (
+          <>
+            <Skeleton className="h-40 w-full" />
+            <Skeleton className="h-64 w-full" />
+            <Skeleton className="h-72 w-full" />
+          </>
         ) : (
-          <ProfileInfoForm user={user} />
+          <>
+            <AccountSummaryCard user={user} />
+            <ProfileInfoForm user={user} />
+            <ChangePasswordForm />
+          </>
         )}
-        <ChangePasswordForm />
       </div>
     </>
   );

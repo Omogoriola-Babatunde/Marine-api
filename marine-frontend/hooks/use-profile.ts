@@ -13,14 +13,22 @@ export function useProfile() {
   });
 }
 
+function pickToastMessage(input: UpdateProfileInput): string {
+  const changedProfile = input.fullName !== undefined || input.email !== undefined;
+  const changedPassword = input.newPassword !== undefined;
+  if (changedPassword && !changedProfile) return "Password updated";
+  if (changedProfile && !changedPassword) return "Profile updated";
+  return "Profile and password updated";
+}
+
 export function useUpdateProfile() {
   const queryClient = useQueryClient();
   return useMutation<AuthUser, Error, UpdateProfileInput>({
     mutationFn: updateCurrentUser,
-    onSuccess: (user) => {
+    onSuccess: (user, input) => {
       setStoredUser(user);
       queryClient.setQueryData(["auth", "me"], user);
-      toast.success("Profile updated");
+      toast.success(pickToastMessage(input));
     },
     onError: (err) => {
       toast.error(err.message);

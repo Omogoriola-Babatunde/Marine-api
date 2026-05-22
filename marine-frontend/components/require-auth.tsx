@@ -1,32 +1,32 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { getToken } from "@/lib/auth";
+import { AUTH_EVENT, getToken } from "@/lib/auth";
+
+type AuthState = "checking" | "authed" | "unauthed";
 
 export function RequireAuth({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const [checked, setChecked] = useState(false);
+  const [state, setState] = useState<AuthState>("checking");
 
   useEffect(() => {
-    if (!getToken()) {
-      router.replace("/login");
-      return;
-    }
-    setChecked(true);
-  }, [router]);
+    const update = () => setState(getToken() ? "authed" : "unauthed");
+    update();
+    window.addEventListener("storage", update);
+    window.addEventListener(AUTH_EVENT, update);
+    return () => {
+      window.removeEventListener("storage", update);
+      window.removeEventListener(AUTH_EVENT, update);
+    };
+  }, []);
 
-  if (!checked) {
-    return (
-      <div className="flex h-svh w-full items-center justify-center p-6">
-        <div className="w-full max-w-md space-y-3">
-          <Skeleton className="h-6 w-32" />
-          <Skeleton className="h-32 w-full" />
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (state !== "unauthed") return;
+    if (window.location.pathname === "/login") return;
+    window.location.assign("/login");
+  }, [state]);
+
+  // "checking" matches SSR / first paint; "unauthed" while redirecting
+  if (state !== "authed") return null;
 
   return <>{children}</>;
 }

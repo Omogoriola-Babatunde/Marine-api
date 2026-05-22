@@ -1,4 +1,4 @@
-import { getToken } from "@/lib/auth";
+import { clearToken, getToken } from "@/lib/auth";
 import type {
   ApiErrorResponse,
   CreateQuoteInput,
@@ -52,6 +52,12 @@ async function fetchJson<T>(
     if (token) headers.set("authorization", `Bearer ${token}`);
   }
   const res = await fetch(path, { ...init, headers });
+  if (auth && res.status === 401 && typeof window !== "undefined") {
+    clearToken();
+    if (window.location.pathname !== "/login") {
+      window.location.assign("/login");
+    }
+  }
   if (!res.ok) throw await parseError(res);
   return (await res.json()) as T;
 }
