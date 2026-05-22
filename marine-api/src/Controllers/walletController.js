@@ -27,7 +27,7 @@ export const topupWallet = async (req, res) => {
       const updated = await tx.user.update({
         where: { id: userId },
         data: { wallet: { increment: amount } },
-        select: { id: true, username: true, wallet: true, role: true },
+        select: { id: true, fullName: true, wallet: true, role: true },
       });
       const transaction = await tx.walletTransaction.create({
         data: {
@@ -57,7 +57,7 @@ export const getMyBalance = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId },
-      select: { id: true, username: true, wallet: true },
+      select: { id: true, fullName: true, wallet: true },
     });
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);

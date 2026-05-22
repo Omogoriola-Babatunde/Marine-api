@@ -49,8 +49,8 @@ export const openApiSpec = {
         type: "object",
         properties: {
           id: { type: "string", format: "uuid" },
-          username: { type: "string" },
-          email: { type: "string", nullable: true },
+          fullName: { type: "string" },
+          email: { type: "string", format: "email" },
           role: { $ref: "#/components/schemas/Role" },
           classARate: { type: "number", format: "double" },
           classBRate: { type: "number", format: "double" },
@@ -60,18 +60,18 @@ export const openApiSpec = {
       },
       RegisterInput: {
         type: "object",
-        required: ["username", "password"],
+        required: ["fullName", "email", "password"],
         properties: {
-          username: { type: "string", maxLength: 50, example: "alice" },
+          fullName: { type: "string", maxLength: 100, example: "Alice Lee" },
+          email: { type: "string", format: "email", maxLength: 200, example: "alice@example.com" },
           password: { type: "string", minLength: 8, example: "correct-horse-battery" },
-          email: { type: "string", maxLength: 200, example: "alice@example.com" },
         },
       },
       LoginInput: {
         type: "object",
-        required: ["username", "password"],
+        required: ["email", "password"],
         properties: {
-          username: { type: "string", example: "alice" },
+          email: { type: "string", format: "email", example: "alice@example.com" },
           password: { type: "string", example: "correct-horse-battery" },
         },
       },
@@ -260,7 +260,7 @@ export const openApiSpec = {
         content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } },
       },
       Conflict: {
-        description: "Resource conflict (e.g. username taken)",
+        description: "Resource conflict (e.g. email already registered)",
         content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } },
       },
       TooManyRequests: {
@@ -878,7 +878,7 @@ export const openApiSpec = {
                         type: "object",
                         properties: {
                           id: { type: "string", format: "uuid" },
-                          email: { type: "string", nullable: true },
+                          email: { type: "string", format: "email" },
                         },
                       },
                     },
@@ -909,7 +909,7 @@ export const openApiSpec = {
                   type: "object",
                   properties: {
                     id: { type: "string", format: "uuid" },
-                    username: { type: "string" },
+                    fullName: { type: "string" },
                     wallet: { type: "number", format: "double" },
                   },
                 },
@@ -957,7 +957,7 @@ export const openApiSpec = {
                       type: "object",
                       properties: {
                         id: { type: "string", format: "uuid" },
-                        username: { type: "string" },
+                        fullName: { type: "string" },
                         role: { type: "string" },
                         wallet: { type: "number", format: "double" },
                       },

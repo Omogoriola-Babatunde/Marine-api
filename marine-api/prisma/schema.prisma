@@ -47,8 +47,8 @@ model Policy {
 
 model User {
   id           String              @id @default(uuid())
-  username     String              @unique
-  email        String?
+  fullName     String
+  email        String              @unique
   password     String
   role         Role
   classARate   Float               @default(0)

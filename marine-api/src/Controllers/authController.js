@@ -11,30 +11,46 @@ const sanitizeUser = (user) => {
   return rest;
 };
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const isStrongPassword = (s) =>
+  typeof s === "string" &&
+  s.length >= 8 &&
+  s.length <= 200 &&
+  /[a-z]/.test(s) &&
+  /[A-Z]/.test(s) &&
+  /\d/.test(s) &&
+  /[^A-Za-z0-9]/.test(s);
+
 export const registerUser = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { fullName, email, password } = req.body;
 
-    if (!username || typeof username !== "string" || username.length > 50) {
-      return res.status(400).json({ error: "username is required (max 50 chars)" });
+    if (!fullName || typeof fullName !== "string" || fullName.length > 100) {
+      return res.status(400).json({ error: "fullName is required (max 100 chars)" });
     }
-    if (!password || typeof password !== "string" || password.length < 8) {
-      return res.status(400).json({ error: "password is required (min 8 chars)" });
+    if (!email || typeof email !== "string" || email.length > 200 || !EMAIL_RE.test(email)) {
+      return res
+        .status(400)
+        .json({ error: "email is required and must be a valid email (max 200 chars)" });
     }
-    if (email && (typeof email !== "string" || email.length > 200)) {
-      return res.status(400).json({ error: "email must be a string (max 200 chars)" });
+    if (!isStrongPassword(password)) {
+      return res.status(400).json({
+        error:
+          "password must be 8-200 chars and include upper & lower case, a number, and a special character",
+      });
     }
 
-    const existing = await prisma.user.findUnique({ where: { username } });
-    if (existing) {
-      return res.status(409).json({ error: "Username already taken" });
+    const emailTaken = await prisma.user.findUnique({ where: { email } });
+    if (emailTaken) {
+      return res.status(409).json({ error: "Email already registered" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
     const user = await prisma.user.create({
       data: {
-        username,
+        fullName,
         email,
         password: hashedPassword,
         role: "USER",
@@ -50,13 +66,13 @@ export const registerUser = async (req, res) => {
 
 export const loginUser = async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
-    if (!username || !password) {
-      return res.status(400).json({ error: "username and password are required" });
+    if (!email || !password) {
+      return res.status(400).json({ error: "email and password are required" });
     }
 
-    const user = await prisma.user.findUnique({ where: { username } });
+    const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
       return res.status(401).json({ error: "Invalid credentials" });
     }

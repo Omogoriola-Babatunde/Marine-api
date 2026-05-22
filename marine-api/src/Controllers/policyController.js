@@ -178,7 +178,7 @@ export const getPolicies = async (req, res) => {
         take: limit,
         include: {
           quote: true,
-          issuedBy: { select: { id: true, username: true, email: true, role: true } },
+          issuedBy: { select: { id: true, fullName: true, email: true, role: true } },
         },
         orderBy: { createdAt: "desc" },
       }),
@@ -202,7 +202,7 @@ export const getpendingPolicies = async (_req, res) => {
       include: {
         quote: true,
         issuedBy: {
-          select: { id: true, username: true, email: true, role: true },
+          select: { id: true, fullName: true, email: true, role: true },
         },
       },
       orderBy: { createdAt: "desc" },
@@ -256,7 +256,7 @@ export const getapprovedPolicies = async (_req, res) => {
       include: {
         quote: true,
         issuedBy: {
-          select: { id: true, username: true, email: true, role: true },
+          select: { id: true, fullName: true, email: true, role: true },
         },
       },
       orderBy: { createdAt: "desc" },
