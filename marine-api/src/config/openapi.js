@@ -923,7 +923,7 @@ export const openApiSpec = {
       get: {
         tags: ["User"],
         summary: "List users (ADMIN, paginated)",
-        description: "Returns only id and email — no sensitive fields.",
+        description: "Returns id, fullName, email, and role. No password, wallet, or rates.",
         security: [{ BearerAuth: [] }],
         parameters: [
           { name: "page", in: "query", schema: { type: "integer", minimum: 1, default: 1 } },
@@ -932,6 +932,7 @@ export const openApiSpec = {
             in: "query",
             schema: { type: "integer", minimum: 1, maximum: 100, default: 10 },
           },
+          { name: "role", in: "query", schema: { $ref: "#/components/schemas/Role" } },
         ],
         responses: {
           200: {
@@ -947,7 +948,9 @@ export const openApiSpec = {
                         type: "object",
                         properties: {
                           id: { type: "string", format: "uuid" },
+                          fullName: { type: "string" },
                           email: { type: "string", format: "email" },
+                          role: { $ref: "#/components/schemas/Role" },
                         },
                       },
                     },
@@ -959,6 +962,57 @@ export const openApiSpec = {
           },
           401: { $ref: "#/components/responses/Unauthorized" },
           403: { $ref: "#/components/responses/Forbidden" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
+    "/api/user/{id}/role": {
+      patch: {
+        tags: ["User"],
+        summary: "Change a user's role (ADMIN)",
+        description: "Cannot change your own role.",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["role"],
+                properties: { role: { $ref: "#/components/schemas/Role" } },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Updated user",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string", format: "uuid" },
+                    fullName: { type: "string" },
+                    email: { type: "string", format: "email" },
+                    role: { $ref: "#/components/schemas/Role" },
+                  },
+                },
+              },
+            },
+          },
+          400: { $ref: "#/components/responses/BadRequest" },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          403: { $ref: "#/components/responses/Forbidden" },
+          404: { $ref: "#/components/responses/NotFound" },
           500: { $ref: "#/components/responses/ServerError" },
         },
       },
