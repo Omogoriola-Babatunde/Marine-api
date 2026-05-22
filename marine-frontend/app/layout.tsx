@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "@/components/providers";
+import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         className={`${geistSans.variable} ${geistMono.variable} font-sans bg-background text-foreground antialiased`}
       >
         <Providers>
+          <SiteHeader />
           <main className="mx-auto max-w-2xl px-4 py-10">{children}</main>
         </Providers>
       </body>

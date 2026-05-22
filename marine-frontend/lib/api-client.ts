@@ -1,9 +1,15 @@
 import type {
   ApiErrorResponse,
   CreateQuoteInput,
+  ForgotPasswordInput,
+  ForgotPasswordResponse,
   IssuePolicyInput,
   IssuePolicyResponse,
+  LoginInput,
+  LoginResponse,
   Quote,
+  RegisterInput,
+  RegisterResponse,
 } from "@/lib/types";
 
 export class ApiError extends Error {
@@ -52,4 +58,34 @@ export async function fetchCertificateBlob(policyNumber: string): Promise<Blob> 
   const res = await fetch(`/api/policy/certificate/${encodeURIComponent(policyNumber)}`);
   if (!res.ok) throw await parseError(res);
   return res.blob();
+}
+
+export async function login(input: LoginInput): Promise<LoginResponse> {
+  const res = await fetch("/api/auth/login", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) throw await parseError(res);
+  return (await res.json()) as LoginResponse;
+}
+
+export async function register(input: RegisterInput): Promise<RegisterResponse> {
+  const res = await fetch("/api/auth/register", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) throw await parseError(res);
+  return (await res.json()) as RegisterResponse;
+}
+
+export async function forgotPassword(input: ForgotPasswordInput): Promise<ForgotPasswordResponse> {
+  const res = await fetch("/api/auth/forgot-password", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) throw await parseError(res);
+  return (await res.json()) as ForgotPasswordResponse;
 }

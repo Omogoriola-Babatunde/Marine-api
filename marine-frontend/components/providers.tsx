@@ -14,12 +14,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const queryTree = persister ? (
     <PersistQueryClientProvider client={client} persistOptions={{ persister }}>
       {children}
-      <Toaster richColors position="top-center" />
+      <Toaster richColors position="bottom-right" />
     </PersistQueryClientProvider>
   ) : (
     <QueryClientProvider client={client}>
       {children}
-      <Toaster richColors position="top-center" />
+      <Toaster richColors position="bottom-right" />
     </QueryClientProvider>
   );
 

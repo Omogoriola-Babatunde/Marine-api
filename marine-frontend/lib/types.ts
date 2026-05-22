@@ -42,3 +42,42 @@ export interface ApiErrorResponse {
   errors?: string[];
   error?: string;
 }
+
+export type UserRole = "ADMIN" | "STAFF" | "USER";
+
+export interface AuthUser {
+  id: string;
+  fullName: string;
+  email: string;
+  role: UserRole;
+  wallet: number;
+  createdAt: string;
+}
+
+export interface LoginInput {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  user: AuthUser;
+}
+
+export interface RegisterInput {
+  fullName: string;
+  email: string;
+  password: string;
+}
+
+export interface RegisterResponse {
+  user: AuthUser;
+}
+
+export interface ForgotPasswordInput {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  message: string;
+}
