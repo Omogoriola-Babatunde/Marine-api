@@ -42,6 +42,24 @@ export const listUsers = async (req, res) => {
   }
 };
 
+export const getUserCounts = async (_req, res) => {
+  try {
+    const grouped = await prisma.user.groupBy({
+      by: ["role"],
+      _count: { _all: true },
+    });
+    const out = { ALL: 0, ADMIN: 0, STAFF: 0, USER: 0 };
+    for (const g of grouped) {
+      out[g.role] = g._count._all;
+      out.ALL += g._count._all;
+    }
+    res.json(out);
+  } catch (error) {
+    console.error("getUserCounts error:", error);
+    res.status(500).json({ error: "Failed to fetch user counts" });
+  }
+};
+
 export const updateUserRole = async (req, res) => {
   try {
     const { id } = req.params;

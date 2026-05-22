@@ -258,6 +258,25 @@ export const getMyPolicies = async (req, res) => {
   }
 };
 
+export const getMyPolicyCounts = async (req, res) => {
+  try {
+    const grouped = await prisma.policy.groupBy({
+      by: ["status"],
+      where: { issuedById: req.user.userId },
+      _count: { _all: true },
+    });
+    const out = { ALL: 0, PENDING_APPROVAL: 0, APPROVED: 0, REJECTED: 0 };
+    for (const g of grouped) {
+      out[g.status] = g._count._all;
+      out.ALL += g._count._all;
+    }
+    res.json(out);
+  } catch (error) {
+    console.error("getMyPolicyCounts error:", error);
+    res.status(500).json({ error: "Failed to fetch policy counts" });
+  }
+};
+
 export const getapprovedPolicies = async (_req, res) => {
   try {
     const policies = await prisma.policy.findMany({

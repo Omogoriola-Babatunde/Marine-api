@@ -158,6 +158,50 @@ export const getMyQuotes = async (req, res) => {
   }
 };
 
+export const getQuoteById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!isUuid(id)) {
+      return res.status(400).json({ error: "Invalid quote id" });
+    }
+
+    const quote = await prisma.quote.findUnique({ where: { id } });
+    if (!quote) {
+      return res.status(404).json({ error: "Quote not found" });
+    }
+
+    const isPrivileged = req.user.role === "ADMIN" || req.user.role === "STAFF";
+    const isCreator = quote.createdById === req.user.userId;
+    if (!isPrivileged && !isCreator) {
+      return res.status(403).json({ error: "Not allowed to view this quote" });
+    }
+
+    res.json(quote);
+  } catch (error) {
+    console.error("getQuoteById error:", error);
+    res.status(500).json({ error: "Failed to fetch quote" });
+  }
+};
+
+export const getMyQuoteCounts = async (req, res) => {
+  try {
+    const grouped = await prisma.quote.groupBy({
+      by: ["status"],
+      where: { createdById: req.user.userId },
+      _count: { _all: true },
+    });
+    const out = { ALL: 0, GENERATED: 0, CONVERTED: 0, EXPIRED: 0 };
+    for (const g of grouped) {
+      out[g.status] = g._count._all;
+      out.ALL += g._count._all;
+    }
+    res.json(out);
+  } catch (error) {
+    console.error("getMyQuoteCounts error:", error);
+    res.status(500).json({ error: "Failed to fetch quote counts" });
+  }
+};
+
 export const getapprovedQuotes = async (_req, res) => {
   try {
     const approvedQuotes = await prisma.quote.findMany({

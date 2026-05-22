@@ -148,6 +148,36 @@ export const openApiSpec = {
         },
       },
 
+      QuoteCounts: {
+        type: "object",
+        properties: {
+          ALL: { type: "integer" },
+          GENERATED: { type: "integer" },
+          CONVERTED: { type: "integer" },
+          EXPIRED: { type: "integer" },
+        },
+      },
+
+      PolicyCounts: {
+        type: "object",
+        properties: {
+          ALL: { type: "integer" },
+          PENDING_APPROVAL: { type: "integer" },
+          APPROVED: { type: "integer" },
+          REJECTED: { type: "integer" },
+        },
+      },
+
+      UserCounts: {
+        type: "object",
+        properties: {
+          ALL: { type: "integer" },
+          ADMIN: { type: "integer" },
+          STAFF: { type: "integer" },
+          USER: { type: "integer" },
+        },
+      },
+
       Policy: {
         type: "object",
         properties: {
@@ -461,6 +491,23 @@ export const openApiSpec = {
         },
       },
     },
+    "/api/quote/mine/counts": {
+      get: {
+        tags: ["Quote"],
+        summary: "Counts of the authenticated user's quotes by status",
+        security: [{ BearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Status counts",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/QuoteCounts" } },
+            },
+          },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
     "/api/quote/pending": {
       get: {
         tags: ["Quote"],
@@ -553,6 +600,30 @@ export const openApiSpec = {
       },
     },
     "/api/quote/{id}": {
+      get: {
+        tags: ["Quote"],
+        summary: "Get a single quote (creator or ADMIN/STAFF)",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        responses: {
+          200: {
+            description: "Quote",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/Quote" } } },
+          },
+          400: { $ref: "#/components/responses/BadRequest" },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          403: { $ref: "#/components/responses/Forbidden" },
+          404: { $ref: "#/components/responses/NotFound" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
       patch: {
         tags: ["Quote"],
         summary: "Edit a GENERATED quote (creator or ADMIN/STAFF)",
@@ -711,6 +782,23 @@ export const openApiSpec = {
             description: "Paginated list of your policies",
             content: {
               "application/json": { schema: { $ref: "#/components/schemas/PolicyList" } },
+            },
+          },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
+    "/api/policy/mine/counts": {
+      get: {
+        tags: ["Policy"],
+        summary: "Counts of the authenticated user's policies by status",
+        security: [{ BearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Status counts",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/PolicyCounts" } },
             },
           },
           401: { $ref: "#/components/responses/Unauthorized" },
@@ -958,6 +1046,24 @@ export const openApiSpec = {
                   },
                 },
               },
+            },
+          },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          403: { $ref: "#/components/responses/Forbidden" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
+    "/api/user/counts": {
+      get: {
+        tags: ["User"],
+        summary: "User counts by role (ADMIN)",
+        security: [{ BearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Role counts",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/UserCounts" } },
             },
           },
           401: { $ref: "#/components/responses/Unauthorized" },

@@ -5,6 +5,7 @@ import {
   downloadCertificate,
   getapprovedPolicies,
   getMyPolicies,
+  getMyPolicyCounts,
   getPolicies,
   getpendingPolicies,
   rejectPolicy,
@@ -17,6 +18,7 @@ const router = express.Router();
 router.post("/", authenticateToken, authorizeRoles("ADMIN", "STAFF"), createPolicy);
 router.get("/", authenticateToken, authorizeRoles("ADMIN", "STAFF"), getPolicies);
 router.get("/mine", authenticateToken, getMyPolicies);
+router.get("/mine/counts", authenticateToken, getMyPolicyCounts);
 router.get("/pending", authenticateToken, authorizeRoles("ADMIN"), getpendingPolicies);
 router.get("/approved", authenticateToken, authorizeRoles("ADMIN", "STAFF"), getapprovedPolicies);
 router.patch("/approve/:id", authenticateToken, authorizeRoles("ADMIN"), approvePolicy);
