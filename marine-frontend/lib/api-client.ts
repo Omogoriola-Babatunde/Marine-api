@@ -60,6 +60,10 @@ export async function createQuote(input: CreateQuoteInput): Promise<Quote> {
   return fetchJson<Quote>("/api/quote", { method: "POST", body: JSON.stringify(input) });
 }
 
+export async function getQuoteById(id: string): Promise<Quote> {
+  return fetchJson<Quote>(`/api/quote/${id}`);
+}
+
 export async function updateQuote(id: string, input: Partial<CreateQuoteInput>): Promise<Quote> {
   return fetchJson<Quote>(`/api/quote/${id}`, {
     method: "PATCH",
@@ -135,6 +139,18 @@ export async function getMyQuotes(q: StatusQuery = {}): Promise<QuoteListRespons
 
 export async function getMyPolicies(q: StatusQuery = {}): Promise<PolicyListResponse> {
   return fetchJson<PolicyListResponse>(`/api/policy/mine${buildQuery(q)}`);
+}
+
+export async function getMyQuoteCounts(): Promise<import("@/lib/types").QuoteCounts> {
+  return fetchJson("/api/quote/mine/counts");
+}
+
+export async function getMyPolicyCounts(): Promise<import("@/lib/types").PolicyCounts> {
+  return fetchJson("/api/policy/mine/counts");
+}
+
+export async function getUserCounts(): Promise<import("@/lib/types").UserCounts> {
+  return fetchJson("/api/user/counts");
 }
 
 export async function getPolicyForQuote(quoteId: string): Promise<Policy | null> {

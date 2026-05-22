@@ -42,42 +42,45 @@ export default function UsersPage() {
     [counts]
   );
 
-  const columns: ColumnDef<UserListItem>[] = [
-    {
-      accessorKey: "fullName",
-      header: "Name",
-      cell: ({ row }) => (
-        <span className="font-medium">
-          {row.original.fullName}
-          {row.original.id === me?.id && (
-            <span className="ml-2 text-xs text-muted-foreground">(you)</span>
-          )}
-        </span>
-      ),
-    },
-    {
-      accessorKey: "email",
-      header: "Email",
-      cell: ({ row }) => (
-        <span className="text-muted-foreground">{row.original.email}</span>
-      ),
-    },
-    {
-      accessorKey: "role",
-      header: "Role",
-      cell: ({ row }) => (
-        <Badge variant={roleVariant[row.original.role]}>{row.original.role}</Badge>
-      ),
-    },
-    {
-      id: "actions",
-      header: () => <span className="sr-only">Actions</span>,
-      cell: ({ row }) => (
-        <UserRowActions user={row.original} isSelf={row.original.id === me?.id} />
-      ),
-      size: 60,
-    },
-  ];
+  const columns = useMemo<ColumnDef<UserListItem>[]>(
+    () => [
+      {
+        accessorKey: "fullName",
+        header: "Name",
+        cell: ({ row }) => (
+          <span className="font-medium">
+            {row.original.fullName}
+            {row.original.id === me?.id && (
+              <span className="ml-2 text-xs text-muted-foreground">(you)</span>
+            )}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "email",
+        header: "Email",
+        cell: ({ row }) => (
+          <span className="text-muted-foreground">{row.original.email}</span>
+        ),
+      },
+      {
+        accessorKey: "role",
+        header: "Role",
+        cell: ({ row }) => (
+          <Badge variant={roleVariant[row.original.role]}>{row.original.role}</Badge>
+        ),
+      },
+      {
+        id: "actions",
+        header: () => <span className="sr-only">Actions</span>,
+        cell: ({ row }) => (
+          <UserRowActions user={row.original} isSelf={row.original.id === me?.id} />
+        ),
+        size: 60,
+      },
+    ],
+    [me?.id]
+  );
 
   if (me && !isAdmin) {
     return (

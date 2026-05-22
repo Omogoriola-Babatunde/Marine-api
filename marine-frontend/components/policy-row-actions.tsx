@@ -2,7 +2,6 @@
 
 import { MoreHorizontalIcon } from "lucide-react";
 import { useState } from "react";
-import { useCertificateUrl } from "@/hooks/use-certificate";
 import {
   ApprovePolicyDialog,
   RejectPolicyDialog,
@@ -16,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuthUser } from "@/hooks/use-auth-user";
+import { useCertificateUrl } from "@/hooks/use-certificate";
 import type { Policy } from "@/lib/types";
 
 export function PolicyRowActions({ policy }: { policy: Policy }) {
@@ -23,17 +23,20 @@ export function PolicyRowActions({ policy }: { policy: Policy }) {
   const isAdmin = me?.role === "ADMIN";
   const isPending = policy.status === "PENDING_APPROVAL";
   const isApproved = policy.status === "APPROVED";
+  const [menuOpen, setMenuOpen] = useState(false);
   const [approveOpen, setApproveOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
 
+  // Only fetch the cert blob when the menu is open AND the policy is
+  // APPROVED — avoids prefetching PDFs for every visible row.
   const { url, isLoading: certLoading } = useCertificateUrl(
-    isApproved ? policy.policyNumber : undefined
+    menuOpen && isApproved ? policy.policyNumber : undefined
   );
 
   return (
     <>
       <div className="flex justify-end">
-        <DropdownMenu>
+        <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Open actions">
               <MoreHorizontalIcon className="size-4" />

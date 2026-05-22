@@ -121,3 +121,24 @@ export interface UserListResponse {
   data: UserListItem[];
   pagination: Pagination;
 }
+
+export interface QuoteCounts {
+  ALL: number;
+  GENERATED: number;
+  CONVERTED: number;
+  EXPIRED: number;
+}
+
+export interface PolicyCounts {
+  ALL: number;
+  PENDING_APPROVAL: number;
+  APPROVED: number;
+  REJECTED: number;
+}
+
+export interface UserCounts {
+  ALL: number;
+  ADMIN: number;
+  STAFF: number;
+  USER: number;
+}

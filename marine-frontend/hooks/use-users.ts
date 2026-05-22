@@ -1,8 +1,8 @@
 "use client";
 
-import { useQueries, useQuery } from "@tanstack/react-query";
-import { listUsers } from "@/lib/api-client";
-import type { UserRole } from "@/lib/types";
+import { useQuery } from "@tanstack/react-query";
+import { getUserCounts, listUsers } from "@/lib/api-client";
+import type { UserCounts, UserRole } from "@/lib/types";
 
 export function useUsers({
   page = 1,
@@ -15,27 +15,17 @@ export function useUsers({
   });
 }
 
-const ROLES: UserRole[] = ["ADMIN", "STAFF", "USER"];
+const EMPTY_USERS: Record<keyof UserCounts, number | null> = {
+  ALL: null,
+  ADMIN: null,
+  STAFF: null,
+  USER: null,
+};
 
-export function useUserRoleCounts() {
-  const queries = useQueries({
-    queries: [
-      {
-        queryKey: ["users", "count", "ALL"],
-        queryFn: () => listUsers({ limit: 1 }),
-      },
-      ...ROLES.map((r) => ({
-        queryKey: ["users", "count", r],
-        queryFn: () => listUsers({ role: r, limit: 1 }),
-      })),
-    ],
+export function useUserRoleCounts(): Record<keyof UserCounts, number | null> {
+  const { data } = useQuery({
+    queryKey: ["users", "counts"],
+    queryFn: getUserCounts,
   });
-
-  const [all, ...byRole] = queries.map((q) => q.data?.pagination.total ?? null);
-  return {
-    ALL: all,
-    ADMIN: byRole[0],
-    STAFF: byRole[1],
-    USER: byRole[2],
-  } as Record<"ALL" | UserRole, number | null>;
+  return data ?? EMPTY_USERS;
 }

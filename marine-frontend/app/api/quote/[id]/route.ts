@@ -3,7 +3,7 @@ import { env } from "@/lib/env";
 async function forward(
   req: Request,
   id: string,
-  method: "PATCH" | "DELETE"
+  method: "GET" | "PATCH" | "DELETE"
 ): Promise<Response> {
   const headers: Record<string, string> = {};
   const incomingAuth = req.headers.get("authorization");
@@ -27,6 +27,14 @@ async function forward(
       "content-type": upstream.headers.get("content-type") ?? "application/json",
     },
   });
+}
+
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+): Promise<Response> {
+  const { id } = await params;
+  return forward(req, id, "GET");
 }
 
 export async function PATCH(
