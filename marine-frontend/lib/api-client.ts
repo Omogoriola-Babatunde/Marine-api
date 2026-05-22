@@ -121,6 +121,23 @@ export async function forgotPassword(input: ForgotPasswordInput): Promise<Forgot
   );
 }
 
+export interface UpdateProfileInput {
+  fullName?: string;
+  email?: string;
+  currentPassword?: string;
+  newPassword?: string;
+}
+
+export async function getCurrentUser(): Promise<import("@/lib/types").AuthUser> {
+  return fetchJson("/api/auth/me");
+}
+
+export async function updateCurrentUser(
+  input: UpdateProfileInput
+): Promise<import("@/lib/types").AuthUser> {
+  return fetchJson("/api/auth/me", { method: "PATCH", body: JSON.stringify(input) });
+}
+
 type StatusQuery = { status?: string; page?: number; limit?: number; quoteId?: string };
 
 function buildQuery(q: StatusQuery): string {

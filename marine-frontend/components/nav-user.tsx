@@ -9,6 +9,7 @@ import {
   SunIcon,
 } from "lucide-react";
 import { useTheme } from "next-themes";
+import Link from "next/link";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -86,9 +87,11 @@ export function NavUser() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <CircleUserRoundIcon />
-                Account
+              <DropdownMenuItem asChild>
+                <Link href="/profile">
+                  <CircleUserRoundIcon />
+                  Account
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <BellIcon />

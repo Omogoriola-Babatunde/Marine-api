@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { useLogin } from "@/hooks/use-login";
 import { type LoginSchema, loginSchema } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
@@ -66,9 +67,8 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                     Forgot your password?
                   </Link>
                 </div>
-                <Input
+                <PasswordInput
                   id="password"
-                  type="password"
                   autoComplete="current-password"
                   disabled={mutation.isPending}
                   aria-invalid={!!errors.password}

@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { DataTablePagination } from "@/components/data-table-pagination";
 import { NewQuoteDialog } from "@/components/new-quote-dialog";
@@ -26,7 +27,14 @@ const columns: ColumnDef<Quote>[] = [
   {
     accessorKey: "cargoType",
     header: "Cargo",
-    cell: ({ row }) => <span className="font-medium">{row.original.cargoType}</span>,
+    cell: ({ row }) => (
+      <Link
+        href={`/quotes/${row.original.id}`}
+        className="font-medium underline-offset-4 hover:underline"
+      >
+        {row.original.cargoType}
+      </Link>
+    ),
   },
   {
     id: "route",

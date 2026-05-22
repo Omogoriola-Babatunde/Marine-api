@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { useRegister } from "@/hooks/use-register";
 import { type SignupFormSchema, signupFormSchema } from "@/lib/schemas";
 
@@ -103,9 +104,8 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
             </Field>
             <Field>
               <FieldLabel htmlFor="password">Password</FieldLabel>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 autoComplete="new-password"
                 disabled={mutation.isPending}
                 aria-invalid={!!errors.password}
@@ -123,9 +123,8 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
             </Field>
             <Field>
               <FieldLabel htmlFor="confirmPassword">Confirm Password</FieldLabel>
-              <Input
+              <PasswordInput
                 id="confirmPassword"
-                type="password"
                 autoComplete="new-password"
                 disabled={mutation.isPending}
                 aria-invalid={!!errors.confirmPassword}
