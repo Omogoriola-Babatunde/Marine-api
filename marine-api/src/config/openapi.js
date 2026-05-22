@@ -407,6 +407,56 @@ export const openApiSpec = {
         },
       },
     },
+    "/api/auth/me": {
+      get: {
+        tags: ["Auth"],
+        summary: "Get the authenticated user's profile",
+        security: [{ BearerAuth: [] }],
+        responses: {
+          200: {
+            description: "User profile",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/User" } } },
+          },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          404: { $ref: "#/components/responses/NotFound" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+      patch: {
+        tags: ["Auth"],
+        summary: "Update the authenticated user's profile",
+        description:
+          "Partial update. Allowed fields: fullName, email, and a password change (requires currentPassword + newPassword).",
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  fullName: { type: "string", maxLength: 100 },
+                  email: { type: "string", format: "email", maxLength: 200 },
+                  currentPassword: { type: "string" },
+                  newPassword: { type: "string", minLength: 8, maxLength: 200 },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Updated user",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/User" } } },
+          },
+          400: { $ref: "#/components/responses/BadRequest" },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          404: { $ref: "#/components/responses/NotFound" },
+          409: { $ref: "#/components/responses/Conflict" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
 
     "/api/quote": {
       post: {
