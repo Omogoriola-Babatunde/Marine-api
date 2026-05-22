@@ -69,14 +69,11 @@ export interface LoginResponse {
   user: AuthUser;
 }
 
-export interface RegisterInput {
+export interface CreateUserInput {
   fullName: string;
   email: string;
   password: string;
-}
-
-export interface RegisterResponse {
-  user: AuthUser;
+  role?: UserRole;
 }
 
 export interface ForgotPasswordInput {

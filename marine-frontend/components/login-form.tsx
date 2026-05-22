@@ -84,12 +84,6 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                 <Button type="submit" disabled={mutation.isPending}>
                   {mutation.isPending ? "Signing in…" : "Login"}
                 </Button>
-                <FieldDescription className="text-center">
-                  Don&apos;t have an account?{" "}
-                  <Link href="/signup" className="underline-offset-4 hover:underline">
-                    Sign up
-                  </Link>
-                </FieldDescription>
               </Field>
             </FieldGroup>
           </form>

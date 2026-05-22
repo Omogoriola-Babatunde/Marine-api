@@ -13,8 +13,6 @@ import type {
   PolicyListResponse,
   Quote,
   QuoteListResponse,
-  RegisterInput,
-  RegisterResponse,
   WalletBalanceResponse,
 } from "@/lib/types";
 
@@ -106,14 +104,6 @@ export async function fetchCertificateBlob(policyNumber: string): Promise<Blob> 
 export async function login(input: LoginInput): Promise<LoginResponse> {
   return fetchJson<LoginResponse>(
     "/api/auth/login",
-    { method: "POST", body: JSON.stringify(input) },
-    { auth: false }
-  );
-}
-
-export async function register(input: RegisterInput): Promise<RegisterResponse> {
-  return fetchJson<RegisterResponse>(
-    "/api/auth/register",
     { method: "POST", body: JSON.stringify(input) },
     { auth: false }
   );
@@ -242,6 +232,15 @@ export async function updateUserRole(
   return fetchJson(`/api/user/${id}/role`, {
     method: "PATCH",
     body: JSON.stringify({ role }),
+  });
+}
+
+export async function createUser(
+  input: import("@/lib/types").CreateUserInput
+): Promise<import("@/lib/types").UserListItem> {
+  return fetchJson("/api/user", {
+    method: "POST",
+    body: JSON.stringify(input),
   });
 }
 

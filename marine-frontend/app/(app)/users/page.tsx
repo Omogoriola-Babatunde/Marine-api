@@ -2,6 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
+import { CreateUserDialog } from "@/components/create-user-dialog";
 import { DataTablePagination } from "@/components/data-table-pagination";
 import { SiteHeader } from "@/components/site-header";
 import { StatusTabs } from "@/components/status-tabs";
@@ -97,14 +98,17 @@ export default function UsersPage() {
     <>
       <SiteHeader title="Users" />
       <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:gap-6 md:py-6 lg:px-6">
-        <StatusTabs
-          value={role}
-          onValueChange={(v) => {
-            setPage(1);
-            setRole(v);
-          }}
-          options={tabs}
-        />
+        <div className="flex items-center justify-between gap-3">
+          <StatusTabs
+            value={role}
+            onValueChange={(v) => {
+              setPage(1);
+              setRole(v);
+            }}
+            options={tabs}
+          />
+          <CreateUserDialog />
+        </div>
 
         <DataTable
           columns={columns}

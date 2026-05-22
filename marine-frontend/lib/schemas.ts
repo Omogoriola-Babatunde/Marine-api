@@ -23,7 +23,7 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
-const strongPassword = z
+export const strongPassword = z
   .string()
   .min(8, "Password must be at least 8 characters")
   .max(200, "Password must be at most 200 characters")
@@ -32,31 +32,18 @@ const strongPassword = z
   .regex(/\d/, "Password must contain a number")
   .regex(/[^A-Za-z0-9]/, "Password must contain a special character");
 
-export const registerSchema = z.object({
+export const createUserSchema = z.object({
   fullName: z.string().min(1, "Full name is required").max(100),
   email: z.string().email("Enter a valid email").max(200),
   password: strongPassword,
+  role: z.enum(["ADMIN", "STAFF", "USER"]),
 });
 
-export const signupFormSchema = z
-  .object({
-    firstName: z.string().min(1, "First name is required").max(50),
-    lastName: z.string().min(1, "Last name is required").max(50),
-    email: z.string().email("Enter a valid email").max(200),
-    password: strongPassword,
-    confirmPassword: z.string().min(1, "Please confirm your password"),
-  })
-  .refine((v) => v.password === v.confirmPassword, {
-    path: ["confirmPassword"],
-    message: "Passwords do not match",
-  });
-
-export type SignupFormSchema = z.infer<typeof signupFormSchema>;
+export type CreateUserSchema = z.infer<typeof createUserSchema>;
 
 export const forgotPasswordSchema = z.object({
   email: z.string().email("Enter a valid email").max(200),
 });
 
 export type LoginSchema = z.infer<typeof loginSchema>;
-export type RegisterSchema = z.infer<typeof registerSchema>;
 export type ForgotPasswordSchema = z.infer<typeof forgotPasswordSchema>;
