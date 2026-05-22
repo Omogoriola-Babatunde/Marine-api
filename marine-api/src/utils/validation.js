@@ -38,11 +38,11 @@ export const validatePolicyInput = (data) => {
   }
 
   if (
-    !data.customername ||
-    typeof data.customername !== "string" ||
-    data.customername.length > 100
+    !data.customerName ||
+    typeof data.customerName !== "string" ||
+    data.customerName.length > 100
   ) {
-    errors.push("customername is required, must be a string, and max 100 characters");
+    errors.push("customerName is required, must be a string, and max 100 characters");
   }
 
   return { valid: errors.length === 0, errors };

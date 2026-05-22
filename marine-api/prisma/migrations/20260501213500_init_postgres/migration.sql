@@ -20,7 +20,7 @@ CREATE TABLE "Policy" (
     "id" TEXT NOT NULL,
     "policyNumber" TEXT NOT NULL,
     "quoteId" TEXT NOT NULL,
-    "customername" TEXT NOT NULL,
+    "customerName" TEXT NOT NULL,
     "status" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

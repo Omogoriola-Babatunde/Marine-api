@@ -1,9 +1,24 @@
 import express from "express";
-import { createQuotes, getQuotes } from "../Controllers/quoteController.js";
+import {
+  approveQuote,
+  createQuotes,
+  getapprovedQuotes,
+  getMyQuotes,
+  getpendingQuotes,
+  getQuotes,
+  rejectQuote,
+} from "../Controllers/quoteController.js";
+import { authenticateToken } from "../middleware/auth.js";
+import { authorizeRoles } from "../middleware/roles.js";
 
 const router = express.Router();
 
-router.post("/", createQuotes);
-router.get("/", getQuotes);
+router.post("/", authenticateToken, authorizeRoles("ADMIN", "STAFF", "USER"), createQuotes);
+router.get("/", authenticateToken, authorizeRoles("ADMIN", "STAFF"), getQuotes);
+router.get("/mine", authenticateToken, getMyQuotes);
+router.get("/pending", authenticateToken, authorizeRoles("ADMIN"), getpendingQuotes);
+router.get("/approved", authenticateToken, authorizeRoles("ADMIN", "STAFF"), getapprovedQuotes);
+router.patch("/approve/:id", authenticateToken, authorizeRoles("ADMIN"), approveQuote);
+router.patch("/reject/:id", authenticateToken, authorizeRoles("ADMIN"), rejectQuote);
 
 export default router;

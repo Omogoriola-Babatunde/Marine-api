@@ -1,19 +1,12 @@
 import { PrismaPg } from "@prisma/adapter-pg";
-import pkg from "@prisma/client";
-
-const { PrismaClient } = pkg;
+import { PrismaClient } from "@prisma/client";
 
 let prisma;
 
 export const getPrismaClient = () => {
   if (!prisma) {
-    const connectionString = process.env.DATABASE_URL;
-    if (!connectionString) {
-      throw new Error("DATABASE_URL is not set");
-    }
-    prisma = new PrismaClient({
-      adapter: new PrismaPg({ connectionString }),
-    });
+    const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+    prisma = new PrismaClient({ adapter });
   }
   return prisma;
 };
