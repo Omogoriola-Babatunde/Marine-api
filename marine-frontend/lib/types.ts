@@ -122,11 +122,29 @@ export interface UserListResponse {
   pagination: Pagination;
 }
 
+export interface QuoteClassBucket {
+  count: number;
+  premium: number;
+  cargoValue: number;
+}
+
 export interface QuoteCounts {
   ALL: number;
   GENERATED: number;
   CONVERTED: number;
   EXPIRED: number;
+  byClass: { A: QuoteClassBucket; B: QuoteClassBucket; C: QuoteClassBucket };
+  totalPremium: number;
+}
+
+export interface TimeseriesPoint {
+  date: string;
+  count: number;
+}
+
+export interface TimeseriesResponse {
+  days: number;
+  data: TimeseriesPoint[];
 }
 
 export interface PolicyCounts {

@@ -176,6 +176,18 @@ export async function getUserCounts(): Promise<import("@/lib/types").UserCounts>
   return fetchJson("/api/user/counts");
 }
 
+export async function getMyQuoteTimeseries(
+  days = 30
+): Promise<import("@/lib/types").TimeseriesResponse> {
+  return fetchJson(`/api/quote/mine/timeseries?days=${days}`);
+}
+
+export async function getMyPolicyTimeseries(
+  days = 30
+): Promise<import("@/lib/types").TimeseriesResponse> {
+  return fetchJson(`/api/policy/mine/timeseries?days=${days}`);
+}
+
 export async function getPolicyForQuote(quoteId: string): Promise<Policy | null> {
   const res = await getMyPolicies({ quoteId, limit: 1 });
   return res.data[0] ?? null;
