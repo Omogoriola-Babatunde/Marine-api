@@ -15,7 +15,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { useDeleteQuote } from "@/hooks/use-quote-mutations";
 
-export function DeleteQuoteAction({ quoteId }: { quoteId: string }) {
+export function DeleteQuoteAction({
+  quoteId,
+  disabled = false,
+}: {
+  quoteId: string;
+  disabled?: boolean;
+}) {
   const mutation = useDeleteQuote();
 
   return (
@@ -24,7 +30,9 @@ export function DeleteQuoteAction({ quoteId }: { quoteId: string }) {
         <Button
           variant="ghost"
           size="sm"
-          className="text-destructive hover:text-destructive"
+          disabled={disabled}
+          title={disabled ? "Only GENERATED quotes can be deleted" : undefined}
+          className={disabled ? undefined : "text-destructive hover:text-destructive"}
         >
           <Trash2Icon />
           Delete

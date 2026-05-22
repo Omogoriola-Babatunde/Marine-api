@@ -123,9 +123,12 @@ export default function QuotesPage() {
                         <Button asChild variant="ghost" size="sm">
                           <Link href={`/quotes/${q.id}`}>Open</Link>
                         </Button>
-                        {q.status === "GENERATED" && <EditQuoteDialog quote={q} />}
-                        {q.status === "GENERATED" && isAdmin && (
-                          <DeleteQuoteAction quoteId={q.id} />
+                        <EditQuoteDialog quote={q} disabled={q.status !== "GENERATED"} />
+                        {isAdmin && (
+                          <DeleteQuoteAction
+                            quoteId={q.id}
+                            disabled={q.status !== "GENERATED"}
+                          />
                         )}
                       </div>
                     </TableCell>

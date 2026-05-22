@@ -4,17 +4,16 @@ import { useEffect, useRef } from "react";
 import { CertificatePreview } from "@/components/certificate-preview";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useCertificateUrl } from "@/hooks/use-certificate";
 import type { Policy } from "@/lib/types";
 
 export function PolicyIssued({ policy }: { policy: Policy }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const { url, isLoading } = useCertificateUrl(policy.policyNumber);
 
   useEffect(() => {
     headingRef.current?.focus();
   }, []);
-
-  const certHref = `/api/policy/certificate/${encodeURIComponent(policy.policyNumber)}`;
-  const certFilename = `certificate-${policy.policyNumber}.pdf`;
 
   return (
     <div className="space-y-6">
@@ -36,9 +35,13 @@ export function PolicyIssued({ policy }: { policy: Policy }) {
 
       <div className="space-y-3">
         <CertificatePreview policyNumber={policy.policyNumber} />
-        <Button asChild>
-          <a href={certHref} download={certFilename}>
-            Download certificate
+        <Button asChild disabled={!url || isLoading}>
+          <a
+            href={url ?? "#"}
+            download={`certificate-${policy.policyNumber}.pdf`}
+            aria-disabled={!url || isLoading}
+          >
+            {isLoading ? "Loading certificate…" : "Download certificate"}
           </a>
         </Button>
       </div>

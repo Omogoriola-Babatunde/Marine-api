@@ -1,9 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { DownloadIcon } from "lucide-react";
-import Link from "next/link";
 import { useState } from "react";
+import { PolicyCertDownload } from "@/components/policy-cert-download";
 import { SiteHeader } from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -108,15 +107,7 @@ export default function PoliciesPage() {
                     </TableCell>
                     <TableCell>
                       {p.status === "APPROVED" ? (
-                        <Button asChild variant="ghost" size="sm">
-                          <Link
-                            href={`/api/policy/certificate/${encodeURIComponent(p.policyNumber)}`}
-                            target="_blank"
-                          >
-                            <DownloadIcon />
-                            Cert
-                          </Link>
-                        </Button>
+                        <PolicyCertDownload policyNumber={p.policyNumber} />
                       ) : null}
                     </TableCell>
                   </TableRow>

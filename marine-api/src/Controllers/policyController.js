@@ -226,7 +226,16 @@ export const getMyPolicies = async (req, res) => {
       return res.status(400).json({ error: `status must be one of ${allowed.join(", ")}` });
     }
 
-    const where = { issuedById: req.user.userId, ...(status ? { status } : {}) };
+    const quoteId = req.query.quoteId;
+    if (quoteId !== undefined && !isUuid(quoteId)) {
+      return res.status(400).json({ error: "quoteId must be a valid uuid" });
+    }
+
+    const where = {
+      issuedById: req.user.userId,
+      ...(status ? { status } : {}),
+      ...(quoteId ? { quoteId } : {}),
+    };
 
     const [policies, total] = await Promise.all([
       prisma.policy.findMany({

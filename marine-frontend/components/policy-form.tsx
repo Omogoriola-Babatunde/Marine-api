@@ -14,14 +14,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { useIssuePolicy } from "@/hooks/use-issue-policy";
 import { type IssuePolicySchema, issuePolicySchema } from "@/lib/schemas";
-import type { IssuePolicyResponse } from "@/lib/types";
 
-interface Props {
-  quoteId: string;
-  onSuccess: (response: IssuePolicyResponse) => void;
-}
-
-export function PolicyForm({ quoteId, onSuccess }: Props) {
+export function PolicyForm({ quoteId }: { quoteId: string }) {
   const mutation = useIssuePolicy();
   const form = useForm<IssuePolicySchema>({
     resolver: zodResolver(issuePolicySchema),
@@ -30,9 +24,7 @@ export function PolicyForm({ quoteId, onSuccess }: Props) {
 
   const onSubmit = (values: IssuePolicySchema) => {
     if (mutation.isPending) return;
-    mutation.mutate(values, {
-      onSuccess,
-    });
+    mutation.mutate(values);
   };
 
   return (

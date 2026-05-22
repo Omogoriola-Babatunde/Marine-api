@@ -117,13 +117,14 @@ export async function forgotPassword(input: ForgotPasswordInput): Promise<Forgot
   );
 }
 
-type StatusQuery = { status?: string; page?: number; limit?: number };
+type StatusQuery = { status?: string; page?: number; limit?: number; quoteId?: string };
 
 function buildQuery(q: StatusQuery): string {
   const params = new URLSearchParams();
   if (q.status) params.set("status", q.status);
   if (q.page != null) params.set("page", String(q.page));
   if (q.limit != null) params.set("limit", String(q.limit));
+  if (q.quoteId) params.set("quoteId", q.quoteId);
   const s = params.toString();
   return s ? `?${s}` : "";
 }
@@ -134,6 +135,11 @@ export async function getMyQuotes(q: StatusQuery = {}): Promise<QuoteListRespons
 
 export async function getMyPolicies(q: StatusQuery = {}): Promise<PolicyListResponse> {
   return fetchJson<PolicyListResponse>(`/api/policy/mine${buildQuery(q)}`);
+}
+
+export async function getPolicyForQuote(quoteId: string): Promise<Policy | null> {
+  const res = await getMyPolicies({ quoteId, limit: 1 });
+  return res.data[0] ?? null;
 }
 
 export async function getWalletBalance(): Promise<WalletBalanceResponse> {

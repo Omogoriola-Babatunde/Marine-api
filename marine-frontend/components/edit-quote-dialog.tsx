@@ -39,7 +39,7 @@ const CLASS_OPTIONS = [
   { value: "C", label: "C — Basic (0.5%)" },
 ] as const;
 
-export function EditQuoteDialog({ quote }: { quote: Quote }) {
+export function EditQuoteDialog({ quote, disabled = false }: { quote: Quote; disabled?: boolean }) {
   const [open, setOpen] = useState(false);
   const mutation = useUpdateQuote(quote.id);
 
@@ -64,7 +64,12 @@ export function EditQuoteDialog({ quote }: { quote: Quote }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm">
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={disabled}
+          title={disabled ? "Only GENERATED quotes can be edited" : undefined}
+        >
           <PencilIcon />
           Edit
         </Button>
