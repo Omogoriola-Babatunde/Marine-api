@@ -2,7 +2,7 @@ import { QuoteForm } from "@/components/quote-form";
 
 export default function HomePage() {
   return (
-    <div className="space-y-6">
+    <main className="mx-auto max-w-2xl space-y-6 px-4 py-10">
       <header>
         <h1 className="text-2xl font-semibold">Get a marine cargo quote</h1>
         <p className="text-muted-foreground">
@@ -10,6 +10,6 @@ export default function HomePage() {
         </p>
       </header>
       <QuoteForm />
-    </div>
+    </main>
   );
 }

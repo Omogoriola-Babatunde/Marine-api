@@ -81,3 +81,26 @@ export interface ForgotPasswordInput {
 export interface ForgotPasswordResponse {
   message: string;
 }
+
+export interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  pages: number;
+}
+
+export interface QuoteListResponse {
+  data: Quote[];
+  pagination: Pagination;
+}
+
+export interface PolicyListResponse {
+  data: Policy[];
+  pagination: Pagination;
+}
+
+export interface WalletBalanceResponse {
+  id: string;
+  fullName: string;
+  wallet: number;
+}

@@ -112,7 +112,8 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
                 {...register("password")}
               />
               <FieldDescription>
-                At least 8 characters, with upper &amp; lower case, a number, and a special character.
+                At least 8 characters, with upper &amp; lower case, a number, and a special
+                character.
               </FieldDescription>
               {errors.password && (
                 <FieldDescription className="text-destructive">

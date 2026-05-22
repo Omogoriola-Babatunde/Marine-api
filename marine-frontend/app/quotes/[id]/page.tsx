@@ -14,17 +14,21 @@ export default function QuoteDetailPage({ params }: { params: Promise<{ id: stri
   const [policy, setPolicy] = useState<Policy | null>(null);
 
   if (!quote) {
-    return <EmptyState />;
+    return (
+      <main className="mx-auto max-w-2xl px-4 py-10">
+        <EmptyState />
+      </main>
+    );
   }
 
   return (
-    <div className="space-y-6">
+    <main className="mx-auto max-w-2xl space-y-6 px-4 py-10">
       <QuoteSummary quote={quote} />
       {policy ? (
         <PolicyIssued policy={policy} />
       ) : (
         <PolicyForm quoteId={id} onSuccess={(r) => setPolicy(r.policy)} />
       )}
-    </div>
+    </main>
   );
 }
