@@ -277,6 +277,44 @@ export const getMyPolicyCounts = async (req, res) => {
   }
 };
 
+const clampDays = (raw) => Math.max(1, Math.min(90, parseInt(raw, 10) || 30));
+
+const fillDateSeries = (rows, days) => {
+  const map = new Map(rows.map((r) => [r.date, Number(r.count)]));
+  const series = [];
+  const now = new Date();
+  now.setUTCHours(0, 0, 0, 0);
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setUTCDate(d.getUTCDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    series.push({ date: key, count: map.get(key) ?? 0 });
+  }
+  return series;
+};
+
+export const getMyPolicyTimeseries = async (req, res) => {
+  try {
+    const days = clampDays(req.query.days);
+    const cutoff = new Date();
+    cutoff.setUTCHours(0, 0, 0, 0);
+    cutoff.setUTCDate(cutoff.getUTCDate() - (days - 1));
+    const rows = await prisma.$queryRaw`
+      SELECT to_char(date_trunc('day', "createdAt"), 'YYYY-MM-DD') AS date,
+             COUNT(*)::int AS count
+      FROM "Policy"
+      WHERE "issuedById" = ${req.user.userId}
+        AND "createdAt" >= ${cutoff}
+      GROUP BY 1
+      ORDER BY 1
+    `;
+    res.json({ days, data: fillDateSeries(rows, days) });
+  } catch (error) {
+    console.error("getMyPolicyTimeseries error:", error);
+    res.status(500).json({ error: "Failed to fetch policy timeseries" });
+  }
+};
+
 export const getapprovedPolicies = async (_req, res) => {
   try {
     const policies = await prisma.policy.findMany({

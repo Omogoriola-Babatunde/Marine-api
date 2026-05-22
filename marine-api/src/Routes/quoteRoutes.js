@@ -6,6 +6,7 @@ import {
   getapprovedQuotes,
   getMyQuoteCounts,
   getMyQuotes,
+  getMyQuoteTimeseries,
   getpendingQuotes,
   getQuoteById,
   getQuotes,
@@ -21,6 +22,7 @@ router.post("/", authenticateToken, authorizeRoles("ADMIN", "STAFF", "USER"), cr
 router.get("/", authenticateToken, authorizeRoles("ADMIN", "STAFF"), getQuotes);
 router.get("/mine", authenticateToken, getMyQuotes);
 router.get("/mine/counts", authenticateToken, getMyQuoteCounts);
+router.get("/mine/timeseries", authenticateToken, getMyQuoteTimeseries);
 router.get("/pending", authenticateToken, authorizeRoles("ADMIN"), getpendingQuotes);
 router.get("/approved", authenticateToken, authorizeRoles("ADMIN", "STAFF"), getapprovedQuotes);
 router.patch("/approve/:id", authenticateToken, authorizeRoles("ADMIN"), approveQuote);

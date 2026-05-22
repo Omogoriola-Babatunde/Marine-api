@@ -185,20 +185,88 @@ export const getQuoteById = async (req, res) => {
 
 export const getMyQuoteCounts = async (req, res) => {
   try {
-    const grouped = await prisma.quote.groupBy({
-      by: ["status"],
-      where: { createdById: req.user.userId },
-      _count: { _all: true },
-    });
-    const out = { ALL: 0, GENERATED: 0, CONVERTED: 0, EXPIRED: 0 };
-    for (const g of grouped) {
+    const where = { createdById: req.user.userId };
+    const [byStatus, byClass] = await Promise.all([
+      prisma.quote.groupBy({ by: ["status"], where, _count: { _all: true } }),
+      prisma.quote.groupBy({
+        by: ["classType"],
+        where,
+        _count: { _all: true },
+        _sum: { premium: true, cargoValue: true },
+      }),
+    ]);
+
+    const out = {
+      ALL: 0,
+      GENERATED: 0,
+      CONVERTED: 0,
+      EXPIRED: 0,
+      byClass: {
+        A: { count: 0, premium: 0, cargoValue: 0 },
+        B: { count: 0, premium: 0, cargoValue: 0 },
+        C: { count: 0, premium: 0, cargoValue: 0 },
+      },
+      totalPremium: 0,
+    };
+    for (const g of byStatus) {
       out[g.status] = g._count._all;
       out.ALL += g._count._all;
+    }
+    for (const g of byClass) {
+      if (out.byClass[g.classType]) {
+        out.byClass[g.classType] = {
+          count: g._count._all,
+          premium: g._sum.premium ?? 0,
+          cargoValue: g._sum.cargoValue ?? 0,
+        };
+        out.totalPremium += g._sum.premium ?? 0;
+      }
     }
     res.json(out);
   } catch (error) {
     console.error("getMyQuoteCounts error:", error);
     res.status(500).json({ error: "Failed to fetch quote counts" });
+  }
+};
+
+const clampDays = (raw) => {
+  const n = Math.max(1, Math.min(90, parseInt(raw, 10) || 30));
+  return n;
+};
+
+const fillDateSeries = (rows, days) => {
+  const map = new Map(rows.map((r) => [r.date, Number(r.count)]));
+  const series = [];
+  const now = new Date();
+  now.setUTCHours(0, 0, 0, 0);
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setUTCDate(d.getUTCDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    series.push({ date: key, count: map.get(key) ?? 0 });
+  }
+  return series;
+};
+
+export const getMyQuoteTimeseries = async (req, res) => {
+  try {
+    const days = clampDays(req.query.days);
+    const cutoff = new Date();
+    cutoff.setUTCHours(0, 0, 0, 0);
+    cutoff.setUTCDate(cutoff.getUTCDate() - (days - 1));
+    const rows = await prisma.$queryRaw`
+      SELECT to_char(date_trunc('day', "createdAt"), 'YYYY-MM-DD') AS date,
+             COUNT(*)::int AS count
+      FROM "Quote"
+      WHERE "createdById" = ${req.user.userId}
+        AND "createdAt" >= ${cutoff}
+      GROUP BY 1
+      ORDER BY 1
+    `;
+    res.json({ days, data: fillDateSeries(rows, days) });
+  } catch (error) {
+    console.error("getMyQuoteTimeseries error:", error);
+    res.status(500).json({ error: "Failed to fetch quote timeseries" });
   }
 };
 
