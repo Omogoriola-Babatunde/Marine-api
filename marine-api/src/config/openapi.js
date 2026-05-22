@@ -552,6 +552,75 @@ export const openApiSpec = {
         },
       },
     },
+    "/api/quote/{id}": {
+      patch: {
+        tags: ["Quote"],
+        summary: "Edit a GENERATED quote (creator or ADMIN/STAFF)",
+        description:
+          "Partial update. Premium is recomputed from classType × cargoValue server-side. Only allowed while the quote is GENERATED; once CONVERTED or EXPIRED returns 409.",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  classType: { type: "string", enum: ["A", "B", "C"] },
+                  cargoType: { type: "string", maxLength: 100 },
+                  cargoValue: { type: "number", format: "double", exclusiveMinimum: 0 },
+                  origin: { type: "string", maxLength: 100 },
+                  destination: { type: "string", maxLength: 100 },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Updated quote",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/Quote" } } },
+          },
+          400: { $ref: "#/components/responses/BadRequest" },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          403: { $ref: "#/components/responses/Forbidden" },
+          404: { $ref: "#/components/responses/NotFound" },
+          409: { $ref: "#/components/responses/Conflict" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+      delete: {
+        tags: ["Quote"],
+        summary: "Delete a GENERATED quote (ADMIN only)",
+        description: "Only allowed while the quote is GENERATED; otherwise returns 409.",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        responses: {
+          204: { description: "Deleted" },
+          400: { $ref: "#/components/responses/BadRequest" },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          403: { $ref: "#/components/responses/Forbidden" },
+          404: { $ref: "#/components/responses/NotFound" },
+          409: { $ref: "#/components/responses/Conflict" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
 
     "/api/policy": {
       post: {

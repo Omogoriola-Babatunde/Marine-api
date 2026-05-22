@@ -171,6 +171,95 @@ export const getapprovedQuotes = async (_req, res) => {
   }
 };
 
+export const updateQuote = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!isUuid(id)) {
+      return res.status(400).json({ error: "Invalid quote id" });
+    }
+
+    const existing = await prisma.quote.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ error: "Quote not found" });
+    }
+    if (existing.status !== "GENERATED") {
+      return res
+        .status(409)
+        .json({ error: `Quote is ${existing.status} and cannot be edited` });
+    }
+
+    const isPrivileged = req.user.role === "ADMIN" || req.user.role === "STAFF";
+    const isCreator = existing.createdById === req.user.userId;
+    if (!isPrivileged && !isCreator) {
+      return res.status(403).json({ error: "Not allowed to edit this quote" });
+    }
+
+    const merged = {
+      classType: req.body.classType ?? existing.classType,
+      cargoType: req.body.cargoType ?? existing.cargoType,
+      cargoValue:
+        req.body.cargoValue !== undefined ? req.body.cargoValue : existing.cargoValue,
+      origin: req.body.origin ?? existing.origin,
+      destination: req.body.destination ?? existing.destination,
+    };
+
+    const validation = validateQuoteInput(merged);
+    if (!validation.valid) {
+      return res.status(400).json({ errors: validation.errors });
+    }
+
+    const premium = calculatePremium(merged.classType, merged.cargoValue);
+
+    const updated = await prisma.quote.update({
+      where: { id },
+      data: { ...merged, premium },
+    });
+
+    await createAuditLog({
+      userId: req.user.userId,
+      action: "UPDATE_QUOTE",
+      description: `Updated quote ${id}`,
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error("updateQuote error:", error);
+    res.status(500).json({ error: "Failed to update quote" });
+  }
+};
+
+export const deleteQuote = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!isUuid(id)) {
+      return res.status(400).json({ error: "Invalid quote id" });
+    }
+
+    const existing = await prisma.quote.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ error: "Quote not found" });
+    }
+    if (existing.status !== "GENERATED") {
+      return res
+        .status(409)
+        .json({ error: `Quote is ${existing.status} and cannot be deleted` });
+    }
+
+    await prisma.quote.delete({ where: { id } });
+
+    await createAuditLog({
+      userId: req.user.userId,
+      action: "DELETE_QUOTE",
+      description: `Deleted quote ${id}`,
+    });
+
+    res.status(204).end();
+  } catch (error) {
+    console.error("deleteQuote error:", error);
+    res.status(500).json({ error: "Failed to delete quote" });
+  }
+};
+
 export const rejectQuote = async (req, res) => {
   try {
     const { id } = req.params;
