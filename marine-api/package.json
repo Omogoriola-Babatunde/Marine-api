@@ -11,7 +11,7 @@
     "format": "biome format --write .",
     "check": "biome check --write .",
     "postinstall": "prisma generate",
-    "build": "prisma migrate deploy"
+    "build": "prisma generate"
   },
   "engines": {
     "node": ">=22.12"
