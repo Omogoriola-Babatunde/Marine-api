@@ -51,7 +51,7 @@ describe("createQuoteSchema", () => {
 describe("issuePolicySchema", () => {
   const valid = {
     quoteId: "550e8400-e29b-41d4-a716-446655440000",
-    customername: "Acme Logistics",
+    customerName: "Acme Logistics",
   };
 
   it("accepts a valid policy input", () => {
@@ -62,12 +62,12 @@ describe("issuePolicySchema", () => {
     expect(issuePolicySchema.safeParse({ ...valid, quoteId: "not-a-uuid" }).success).toBe(false);
   });
 
-  it("rejects empty customername", () => {
-    expect(issuePolicySchema.safeParse({ ...valid, customername: "" }).success).toBe(false);
+  it("rejects empty customerName", () => {
+    expect(issuePolicySchema.safeParse({ ...valid, customerName: "" }).success).toBe(false);
   });
 
-  it("rejects customername > 100 chars", () => {
-    expect(issuePolicySchema.safeParse({ ...valid, customername: "x".repeat(101) }).success).toBe(
+  it("rejects customerName > 100 chars", () => {
+    expect(issuePolicySchema.safeParse({ ...valid, customerName: "x".repeat(101) }).success).toBe(
       false
     );
   });

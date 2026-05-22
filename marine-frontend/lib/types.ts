@@ -1,5 +1,7 @@
 export type QuoteClassType = "A" | "B" | "C";
 
+export type QuoteStatus = "GENERATED" | "CONVERTED" | "EXPIRED";
+
 export interface Quote {
   id: string;
   classType: QuoteClassType;
@@ -8,6 +10,7 @@ export interface Quote {
   origin: string;
   destination: string;
   premium: number;
+  status: QuoteStatus;
   createdAt: string;
 }
 
@@ -15,9 +18,11 @@ export interface Policy {
   id: string;
   policyNumber: string;
   quoteId: string;
-  customername: string;
+  customerName: string;
   status: string;
   createdAt: string;
+  quote?: Quote;
+  issuedById?: string;
 }
 
 export interface CreateQuoteInput {
@@ -30,7 +35,7 @@ export interface CreateQuoteInput {
 
 export interface IssuePolicyInput {
   quoteId: string;
-  customername: string;
+  customerName: string;
 }
 
 export interface IssuePolicyResponse {

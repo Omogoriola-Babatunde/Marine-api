@@ -7,7 +7,7 @@ export async function proxyToBackend(
 ): Promise<Response> {
   const headers: Record<string, string> = {};
   const incomingAuth = req.headers.get("authorization");
-  if (incomingAuth) headers["authorization"] = incomingAuth;
+  if (incomingAuth) headers.authorization = incomingAuth;
 
   const init: RequestInit = { method, headers };
   if (method !== "GET" && method !== "DELETE") {

@@ -25,7 +25,7 @@ export function PolicyForm({ quoteId, onSuccess }: Props) {
   const mutation = useIssuePolicy();
   const form = useForm<IssuePolicySchema>({
     resolver: zodResolver(issuePolicySchema),
-    defaultValues: { quoteId, customername: "" },
+    defaultValues: { quoteId, customerName: "" },
   });
 
   const onSubmit = (values: IssuePolicySchema) => {
@@ -40,7 +40,7 @@ export function PolicyForm({ quoteId, onSuccess }: Props) {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="customername"
+          name="customerName"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Customer name</FormLabel>

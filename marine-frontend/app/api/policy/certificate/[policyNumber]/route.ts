@@ -7,7 +7,7 @@ export async function GET(
   const { policyNumber } = await params;
   const incomingAuth = req.headers.get("authorization");
   const headers: Record<string, string> = {};
-  if (incomingAuth) headers["authorization"] = incomingAuth;
+  if (incomingAuth) headers.authorization = incomingAuth;
 
   const upstream = await fetch(
     `${env.API_URL}/api/policy/certificate/${encodeURIComponent(policyNumber)}`,

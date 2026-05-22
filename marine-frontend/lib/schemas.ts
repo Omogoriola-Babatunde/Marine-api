@@ -12,7 +12,7 @@ export const createQuoteSchema = z.object({
 
 export const issuePolicySchema = z.object({
   quoteId: z.string().uuid(),
-  customername: z.string().min(1).max(100),
+  customerName: z.string().min(1).max(100),
 });
 
 export type CreateQuoteSchema = z.infer<typeof createQuoteSchema>;

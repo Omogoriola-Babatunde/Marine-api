@@ -15,7 +15,7 @@ export const FIXTURE_POLICY = {
   id: "policy-1",
   policyNumber: "POL-1234567890",
   quoteId: FIXTURE_QUOTE_ID,
-  customername: "Acme Logistics",
+  customerName: "Acme Logistics",
   status: "active",
   createdAt: "2026-05-02T00:00:01.000Z",
 };

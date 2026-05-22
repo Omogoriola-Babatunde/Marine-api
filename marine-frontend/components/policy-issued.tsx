@@ -26,7 +26,7 @@ export function PolicyIssued({ policy }: { policy: Policy }) {
         </CardHeader>
         <CardContent className="space-y-1 text-sm">
           <div>
-            <span className="text-muted-foreground">Customer:</span> {policy.customername}
+            <span className="text-muted-foreground">Customer:</span> {policy.customerName}
           </div>
           <div>
             <span className="text-muted-foreground">Status:</span> {policy.status}

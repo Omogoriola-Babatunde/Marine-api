@@ -60,6 +60,21 @@ export async function createQuote(input: CreateQuoteInput): Promise<Quote> {
   return fetchJson<Quote>("/api/quote", { method: "POST", body: JSON.stringify(input) });
 }
 
+export async function updateQuote(id: string, input: Partial<CreateQuoteInput>): Promise<Quote> {
+  return fetchJson<Quote>(`/api/quote/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function deleteQuote(id: string): Promise<void> {
+  const token = getToken();
+  const headers = new Headers();
+  if (token) headers.set("authorization", `Bearer ${token}`);
+  const res = await fetch(`/api/quote/${id}`, { method: "DELETE", headers });
+  if (!res.ok && res.status !== 204) throw await parseError(res);
+}
+
 export async function issuePolicy(input: IssuePolicyInput): Promise<IssuePolicyResponse> {
   return fetchJson<IssuePolicyResponse>("/api/policy", {
     method: "POST",
@@ -123,6 +138,25 @@ export async function getMyPolicies(q: StatusQuery = {}): Promise<PolicyListResp
 
 export async function getWalletBalance(): Promise<WalletBalanceResponse> {
   return fetchJson<WalletBalanceResponse>("/api/wallet/balance");
+}
+
+export interface TopupInput {
+  userId: string;
+  amount: number;
+  description?: string;
+}
+
+export interface TopupResponse {
+  message: string;
+  user: { id: string; fullName: string; role: string; wallet: number };
+  transaction: { id: string; amount: number; type: "CREDIT" | "DEBIT"; description: string };
+}
+
+export async function topupWallet(input: TopupInput): Promise<TopupResponse> {
+  return fetchJson<TopupResponse>("/api/wallet/topup", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
 }
 
 export type { Pagination, Policy, Quote };
