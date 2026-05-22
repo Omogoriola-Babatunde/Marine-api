@@ -1,8 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PencilIcon } from "lucide-react";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +9,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -39,8 +36,15 @@ const CLASS_OPTIONS = [
   { value: "C", label: "C — Basic (0.5%)" },
 ] as const;
 
-export function EditQuoteDialog({ quote, disabled = false }: { quote: Quote; disabled?: boolean }) {
-  const [open, setOpen] = useState(false);
+export function EditQuoteDialog({
+  quote,
+  open,
+  onOpenChange,
+}: {
+  quote: Quote;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const mutation = useUpdateQuote(quote.id);
 
   const form = useForm<CreateQuoteSchema>({
@@ -57,23 +61,12 @@ export function EditQuoteDialog({ quote, disabled = false }: { quote: Quote; dis
   const onSubmit = (values: CreateQuoteSchema) => {
     if (mutation.isPending) return;
     mutation.mutate(values, {
-      onSuccess: () => setOpen(false),
+      onSuccess: () => onOpenChange(false),
     });
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled={disabled}
-          title={disabled ? "Only GENERATED quotes can be edited" : undefined}
-        >
-          <PencilIcon />
-          Edit
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={(o) => !mutation.isPending && onOpenChange(o)}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Edit quote</DialogTitle>
@@ -173,7 +166,7 @@ export function EditQuoteDialog({ quote, disabled = false }: { quote: Quote; dis
                 type="button"
                 variant="outline"
                 disabled={mutation.isPending}
-                onClick={() => setOpen(false)}
+                onClick={() => onOpenChange(false)}
               >
                 Cancel
               </Button>

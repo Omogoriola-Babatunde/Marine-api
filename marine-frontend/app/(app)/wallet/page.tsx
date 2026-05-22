@@ -1,15 +1,23 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthUser } from "@/hooks/use-auth-user";
+import { useUsers } from "@/hooks/use-users";
 import { useWalletBalance, useWalletTopup } from "@/hooks/use-wallet";
 
 const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
@@ -42,7 +50,9 @@ function BalanceCard() {
 
 function AdminTopupCard() {
   const mutation = useWalletTopup();
+  const { data: users, isLoading: usersLoading } = useUsers({ limit: 100 });
   const {
+    control,
     register,
     handleSubmit,
     reset,
@@ -75,12 +85,34 @@ function AdminTopupCard() {
         <form onSubmit={handleSubmit(onSubmit)}>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="userId">User ID</FieldLabel>
-              <Input
-                id="userId"
-                disabled={mutation.isPending}
-                aria-invalid={!!errors.userId}
-                {...register("userId")}
+              <FieldLabel htmlFor="userId">User</FieldLabel>
+              <Controller
+                name="userId"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    disabled={mutation.isPending || usersLoading}
+                  >
+                    <SelectTrigger
+                      id="userId"
+                      aria-invalid={!!errors.userId}
+                      className="w-full"
+                    >
+                      <SelectValue
+                        placeholder={usersLoading ? "Loading users…" : "Pick a user"}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {users?.data.map((u) => (
+                        <SelectItem key={u.id} value={u.id}>
+                          {u.fullName} <span className="text-muted-foreground">({u.email})</span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               />
               {errors.userId && (
                 <FieldDescription className="text-destructive">

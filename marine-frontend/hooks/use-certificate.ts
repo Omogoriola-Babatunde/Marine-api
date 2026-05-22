@@ -15,7 +15,7 @@ export function useCertificateUrl(policyNumber: string | null | undefined) {
   const [url, setUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!query.data) {
+    if (!query.data || !(query.data instanceof Blob)) {
       setUrl(null);
       return;
     }

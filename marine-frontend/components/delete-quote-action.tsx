@@ -1,65 +1,56 @@
 "use client";
 
-import { Trash2Icon } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useDeleteQuote } from "@/hooks/use-quote-mutations";
 
-export function DeleteQuoteAction({
+export function DeleteQuoteDialog({
   quoteId,
-  disabled = false,
+  open,
+  onOpenChange,
 }: {
   quoteId: string;
-  disabled?: boolean;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }) {
   const mutation = useDeleteQuote();
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled={disabled}
-          title={disabled ? "Only GENERATED quotes can be deleted" : undefined}
-          className={disabled ? undefined : "text-destructive hover:text-destructive"}
-        >
-          <Trash2Icon />
-          Delete
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete this quote?</AlertDialogTitle>
-          <AlertDialogDescription>
+    <Dialog open={open} onOpenChange={(o) => !mutation.isPending && onOpenChange(o)}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Delete this quote?</DialogTitle>
+          <DialogDescription>
             This action cannot be undone. Quotes that have already been issued as policies
             cannot be deleted.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={mutation.isPending}>Cancel</AlertDialogCancel>
-          <AlertDialogAction
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button
+            variant="outline"
             disabled={mutation.isPending}
-            onClick={(e) => {
-              e.preventDefault();
-              mutation.mutate(quoteId);
-            }}
+            onClick={() => onOpenChange(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            disabled={mutation.isPending}
+            onClick={() =>
+              mutation.mutate(quoteId, { onSuccess: () => onOpenChange(false) })
+            }
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             {mutation.isPending ? "Deleting…" : "Delete"}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

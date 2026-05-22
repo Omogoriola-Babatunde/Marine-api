@@ -109,3 +109,15 @@ export interface WalletBalanceResponse {
   fullName: string;
   wallet: number;
 }
+
+export interface UserListItem {
+  id: string;
+  fullName: string;
+  email: string;
+  role: UserRole;
+}
+
+export interface UserListResponse {
+  data: UserListItem[];
+  pagination: Pagination;
+}

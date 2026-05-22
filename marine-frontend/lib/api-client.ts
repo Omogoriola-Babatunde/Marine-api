@@ -142,6 +142,14 @@ export async function getPolicyForQuote(quoteId: string): Promise<Policy | null>
   return res.data[0] ?? null;
 }
 
+export async function approvePolicy(id: string): Promise<{ message: string; policy: Policy }> {
+  return fetchJson(`/api/policy/approve/${id}`, { method: "PATCH" });
+}
+
+export async function rejectPolicy(id: string): Promise<{ message: string; policy: Policy }> {
+  return fetchJson(`/api/policy/reject/${id}`, { method: "PATCH" });
+}
+
 export async function getWalletBalance(): Promise<WalletBalanceResponse> {
   return fetchJson<WalletBalanceResponse>("/api/wallet/balance");
 }
@@ -162,6 +170,27 @@ export async function topupWallet(input: TopupInput): Promise<TopupResponse> {
   return fetchJson<TopupResponse>("/api/wallet/topup", {
     method: "POST",
     body: JSON.stringify(input),
+  });
+}
+
+export async function listUsers(
+  params: { page?: number; limit?: number; role?: import("@/lib/types").UserRole } = {}
+): Promise<import("@/lib/types").UserListResponse> {
+  const search = new URLSearchParams();
+  if (params.page != null) search.set("page", String(params.page));
+  if (params.limit != null) search.set("limit", String(params.limit));
+  if (params.role) search.set("role", params.role);
+  const qs = search.toString();
+  return fetchJson(`/api/user${qs ? `?${qs}` : ""}`);
+}
+
+export async function updateUserRole(
+  id: string,
+  role: import("@/lib/types").UserRole
+): Promise<import("@/lib/types").UserListItem> {
+  return fetchJson(`/api/user/${id}/role`, {
+    method: "PATCH",
+    body: JSON.stringify({ role }),
   });
 }
 
