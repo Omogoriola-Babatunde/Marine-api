@@ -1,3 +1,4 @@
+import bcrypt from "bcrypt";
 import { getPrismaClient } from "../config/db.js";
 import { createAuditLog } from "../utils/auditLogger.js";
 import { isUuid } from "../utils/validation.js";
@@ -5,6 +6,70 @@ import { isUuid } from "../utils/validation.js";
 const prisma = getPrismaClient();
 
 const ALLOWED_ROLES = ["ADMIN", "STAFF", "USER"];
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const isStrongPassword = (s) =>
+  typeof s === "string" &&
+  s.length >= 8 &&
+  s.length <= 200 &&
+  /[a-z]/.test(s) &&
+  /[A-Z]/.test(s) &&
+  /\d/.test(s) &&
+  /[^A-Za-z0-9]/.test(s);
+
+const sanitizeUser = (user) => {
+  if (!user) return user;
+  const { password, ...rest } = user;
+  return rest;
+};
+
+export const createUser = async (req, res) => {
+  try {
+    const { fullName, email, password, role } = req.body;
+
+    if (!fullName || typeof fullName !== "string" || fullName.length > 100) {
+      return res.status(400).json({ error: "fullName is required (max 100 chars)" });
+    }
+    if (!email || typeof email !== "string" || email.length > 200 || !EMAIL_RE.test(email)) {
+      return res
+        .status(400)
+        .json({ error: "email is required and must be a valid email (max 200 chars)" });
+    }
+    if (!isStrongPassword(password)) {
+      return res.status(400).json({
+        error:
+          "password must be 8-200 chars and include upper & lower case, a number, and a special character",
+      });
+    }
+    const finalRole = role ?? "USER";
+    if (!ALLOWED_ROLES.includes(finalRole)) {
+      return res.status(400).json({ error: `role must be one of ${ALLOWED_ROLES.join(", ")}` });
+    }
+
+    const emailTaken = await prisma.user.findUnique({ where: { email } });
+    if (emailTaken) {
+      return res.status(409).json({ error: "Email already registered" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    const user = await prisma.user.create({
+      data: { fullName, email, password: hashedPassword, role: finalRole },
+    });
+
+    await createAuditLog({
+      userId: req.user.userId,
+      action: "CREATE_USER",
+      description: `Created user ${user.id} (${user.email}) with role ${finalRole}`,
+    });
+
+    res.status(201).json(sanitizeUser(user));
+  } catch (error) {
+    console.error("createUser error:", error);
+    res.status(500).json({ error: "Failed to create user" });
+  }
+};
 
 export const listUsers = async (req, res) => {
   try {

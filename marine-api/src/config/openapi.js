@@ -1103,6 +1103,41 @@ export const openApiSpec = {
           500: { $ref: "#/components/responses/ServerError" },
         },
       },
+      post: {
+        tags: ["User"],
+        summary: "Create a new user (ADMIN)",
+        description:
+          "Admin-only user creation. Admin picks the role; defaults to USER. Strong password rule applies (8-200 chars, mixed case + digit + symbol).",
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["fullName", "email", "password"],
+                properties: {
+                  fullName: { type: "string", maxLength: 100 },
+                  email: { type: "string", format: "email", maxLength: 200 },
+                  password: { type: "string", minLength: 8, maxLength: 200 },
+                  role: { $ref: "#/components/schemas/Role" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: {
+            description: "Created user (password stripped)",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/User" } } },
+          },
+          400: { $ref: "#/components/responses/BadRequest" },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          403: { $ref: "#/components/responses/Forbidden" },
+          409: { $ref: "#/components/responses/Conflict" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
     },
     "/api/user/counts": {
       get: {
