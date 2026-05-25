@@ -18,7 +18,7 @@ export function useLogin() {
       setStoredUser(user);
       queryClient.setQueryData(["auth", "me"], user);
       toast.success(`Welcome back, ${user.fullName}`);
-      router.push("/dashboard");
+      router.push(user.role === "ADMIN" ? "/dashboard" : "/quotes");
     },
     onError: (err) => {
       toast.error(err.message);
