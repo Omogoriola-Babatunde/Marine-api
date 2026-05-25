@@ -60,6 +60,22 @@ model User {
   policies            Policy[]
   transactions        WalletTransaction[]
   AuditLog            AuditLog[]
+  notifications       Notification[]
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  message   String
+  linkType  String?
+  linkId    String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
 }
 
 enum Role {

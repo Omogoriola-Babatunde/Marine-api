@@ -5,6 +5,7 @@ import swaggerUi from "swagger-ui-express";
 import { openApiSpec } from "./config/openapi.js";
 import auditRoutes from "./Routes/auditRoutes.js";
 import authRoutes from "./Routes/authRoutes.js";
+import notificationRoutes from "./Routes/notificationRoutes.js";
 import policyRoutes from "./Routes/policyRoutes.js";
 import quoteRoutes from "./Routes/quoteRoutes.js";
 import reportRoutes from "./Routes/reportRoutes.js";
@@ -78,6 +79,7 @@ app.use("/api/reports", reportRoutes);
 app.use("/api/audit", auditRoutes);
 app.use("/api/wallet", walletRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/notifications", notificationRoutes);
 app.use((_req, res) => {
   res.status(404).json({ error: "Not found" });
 });

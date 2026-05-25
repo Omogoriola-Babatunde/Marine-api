@@ -14,6 +14,7 @@ export const openApiSpec = {
     { name: "Auth", description: "Registration, login, password reset" },
     { name: "Quote", description: "Insurance quotes & premium calculation" },
     { name: "Policy", description: "Policy issuance, approval, certificates" },
+    { name: "Notification", description: "In-app notifications" },
     { name: "Reports", description: "Production reports (admin)" },
     { name: "Audit", description: "Audit log (admin)" },
   ],
@@ -176,6 +177,21 @@ export const openApiSpec = {
           STAFF: { type: "integer" },
           USER: { type: "integer" },
         },
+      },
+
+      Notification: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          userId: { type: "string", format: "uuid" },
+          title: { type: "string" },
+          message: { type: "string" },
+          linkType: { type: "string", nullable: true, example: "POLICY" },
+          linkId: { type: "string", nullable: true },
+          isRead: { type: "boolean" },
+          createdAt: { type: "string", format: "date-time" },
+        },
+        required: ["id", "userId", "title", "message", "isRead", "createdAt"],
       },
 
       Policy: {
@@ -1353,6 +1369,57 @@ export const openApiSpec = {
           400: { $ref: "#/components/responses/BadRequest" },
           401: { $ref: "#/components/responses/Unauthorized" },
           403: { $ref: "#/components/responses/Forbidden" },
+          404: { $ref: "#/components/responses/NotFound" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
+
+    "/api/notifications": {
+      get: {
+        tags: ["Notification"],
+        summary: "List the authenticated user's notifications (newest first)",
+        security: [{ BearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Array of notifications",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: { $ref: "#/components/schemas/Notification" },
+                },
+              },
+            },
+          },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
+    "/api/notifications/{id}/read": {
+      patch: {
+        tags: ["Notification"],
+        summary: "Mark a notification as read",
+        description: "404 if the notification does not exist or belongs to another user.",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        responses: {
+          200: {
+            description: "Updated notification",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/Notification" } },
+            },
+          },
+          400: { $ref: "#/components/responses/BadRequest" },
+          401: { $ref: "#/components/responses/Unauthorized" },
           404: { $ref: "#/components/responses/NotFound" },
           500: { $ref: "#/components/responses/ServerError" },
         },

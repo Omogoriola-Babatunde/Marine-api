@@ -128,6 +128,8 @@ export const approvePolicy = async (req, res) => {
       userId: policy.issuedById,
       title: "Policy Approved",
       message: `Policy ${policy.policyNumber} has been approved.`,
+      linkType: "POLICY",
+      linkId: policy.id,
     });
     await createAuditLog({
       userId: req.user.userId,
@@ -162,6 +164,13 @@ export const rejectPolicy = async (req, res) => {
       data: { status: "REJECTED" },
     });
 
+    await createNotification({
+      userId: policy.issuedById,
+      title: "Policy Rejected",
+      message: `Policy ${policy.policyNumber} was rejected.`,
+      linkType: "POLICY",
+      linkId: policy.id,
+    });
     await createAuditLog({
       userId: req.user.userId,
       action: "REJECT_POLICY",
