@@ -7,8 +7,8 @@ export const validateQuoteInput = (data) => {
 
   if (!data.classType || typeof data.classType !== "string") {
     errors.push("classType is required and must be a string");
-  } else if (!["A", "B", "C"].includes(data.classType)) {
-    errors.push("classType must be A, B, or C");
+  } else if (!["A", "B"].includes(data.classType)) {
+    errors.push("classType must be A or B");
   }
 
   if (!data.cargoType || typeof data.cargoType !== "string" || data.cargoType.length > 100) {
@@ -30,6 +30,15 @@ export const validateQuoteInput = (data) => {
   return { valid: errors.length === 0, errors };
 };
 
+const ALLOWED_MODES = ["SEA", "AIR"];
+const ALLOWED_CURRENCIES = ["USD", "GBP", "JPY", "EUR"];
+
+const isIsoDate = (v) => {
+  if (typeof v !== "string" || !v) return false;
+  const d = new Date(v);
+  return Number.isFinite(d.getTime());
+};
+
 export const validatePolicyInput = (data) => {
   const errors = [];
 
@@ -42,7 +51,55 @@ export const validatePolicyInput = (data) => {
     typeof data.customerName !== "string" ||
     data.customerName.length > 100
   ) {
-    errors.push("customerName is required, must be a string, and max 100 characters");
+    errors.push("customerName is required (max 100 characters)");
+  }
+
+  if (
+    !data.proformaInvoice ||
+    typeof data.proformaInvoice !== "string" ||
+    data.proformaInvoice.length > 200
+  ) {
+    errors.push("proformaInvoice is required (max 200 characters)");
+  }
+
+  if (
+    !data.mode ||
+    typeof data.mode !== "string" ||
+    !ALLOWED_MODES.includes(data.mode.toUpperCase())
+  ) {
+    errors.push(`mode is required and must be one of ${ALLOWED_MODES.join(", ")}`);
+  }
+
+  if (
+    !data.currency ||
+    typeof data.currency !== "string" ||
+    !ALLOWED_CURRENCIES.includes(data.currency.toUpperCase())
+  ) {
+    errors.push(`currency is required and must be one of ${ALLOWED_CURRENCIES.join(", ")}`);
+  }
+
+  if (!Number.isFinite(data.invoiceValue) || data.invoiceValue <= 0) {
+    errors.push("invoiceValue is required and must be a positive number");
+  }
+
+  if (!Number.isFinite(data.exchangeRate) || data.exchangeRate <= 0) {
+    errors.push("exchangeRate is required and must be a positive number");
+  }
+
+  if (!isIsoDate(data.startDate)) {
+    errors.push("startDate is required and must be a valid date");
+  }
+
+  if (!isIsoDate(data.endDate)) {
+    errors.push("endDate is required and must be a valid date");
+  }
+
+  if (isIsoDate(data.startDate) && isIsoDate(data.endDate)) {
+    const start = new Date(data.startDate);
+    const end = new Date(data.endDate);
+    if (end < start) {
+      errors.push("endDate must be on or after startDate");
+    }
   }
 
   return { valid: errors.length === 0, errors };

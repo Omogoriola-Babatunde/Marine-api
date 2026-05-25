@@ -1,6 +1,19 @@
 import { escapeHtml } from "../../utils/validation.js";
 
-const formatMoney = (n) => n.toLocaleString("en-US", { style: "currency", currency: "USD" });
+// Always render the Nigerian Naira (₦) explicitly — Intl's en-NG locale data
+// is inconsistent across runtimes (sometimes outputs "NGN 1,000.00"). Using
+// `decimal` style + a manual symbol keeps the certificate output stable.
+const NAIRA = "₦";
+const moneyFmt = new Intl.NumberFormat("en-NG", {
+  style: "decimal",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+const formatMoney = (n) => {
+  if (!Number.isFinite(n)) return `${NAIRA}0.00`;
+  const sign = n < 0 ? "-" : "";
+  return `${sign}${NAIRA}${moneyFmt.format(Math.abs(n))}`;
+};
 
 const formatDate = (d) =>
   new Date(d).toLocaleDateString("en-US", {
@@ -321,7 +334,7 @@ export const renderHtml = (policy, quote) => `<!DOCTYPE html>
       <div class="coverage">
         <div class="left">
           <div class="k">Insured value</div>
-          <div class="v">${formatMoney(quote.cargoValue)}<span class="currency">USD</span></div>
+          <div class="v">${formatMoney(quote.cargoValue)}</div>
         </div>
         <div class="right">
           <div class="k">Premium</div>

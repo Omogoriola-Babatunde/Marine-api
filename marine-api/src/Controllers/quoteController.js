@@ -21,7 +21,15 @@ export const createQuotes = async (req, res) => {
       return res.status(400).json({ errors: validation.errors });
     }
 
-    const premium = calculatePremium(classType, cargoValue);
+    const rates = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: { classARate: true, classBRate: true },
+    });
+    if (!rates) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const premium = calculatePremium(classType, cargoValue, rates.classARate, rates.classBRate);
     const quote = await prisma.quote.create({
       data: {
         classType,
@@ -204,7 +212,6 @@ export const getMyQuoteCounts = async (req, res) => {
       byClass: {
         A: { count: 0, premium: 0, cargoValue: 0 },
         B: { count: 0, premium: 0, cargoValue: 0 },
-        C: { count: 0, premium: 0, cargoValue: 0 },
       },
       totalPremium: 0,
     };
@@ -320,7 +327,20 @@ export const updateQuote = async (req, res) => {
       return res.status(400).json({ errors: validation.errors });
     }
 
-    const premium = calculatePremium(merged.classType, merged.cargoValue);
+    const ownerRates = await prisma.user.findUnique({
+      where: { id: existing.createdById },
+      select: { classARate: true, classBRate: true },
+    });
+    if (!ownerRates) {
+      return res.status(404).json({ error: "Quote owner not found" });
+    }
+
+    const premium = calculatePremium(
+      merged.classType,
+      merged.cargoValue,
+      ownerRates.classARate,
+      ownerRates.classBRate,
+    );
 
     const updated = await prisma.quote.update({
       where: { id },

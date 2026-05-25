@@ -94,7 +94,7 @@ export const openApiSpec = {
         type: "object",
         properties: {
           id: { type: "string", format: "uuid" },
-          classType: { type: "string", enum: ["A", "B", "C"] },
+          classType: { type: "string", enum: ["A", "B"] },
           cargoType: { type: "string", maxLength: 100 },
           cargoValue: { type: "number", format: "double", minimum: 0.01 },
           origin: { type: "string", maxLength: 100 },
@@ -120,7 +120,7 @@ export const openApiSpec = {
         type: "object",
         required: ["classType", "cargoType", "cargoValue", "origin", "destination"],
         properties: {
-          classType: { type: "string", enum: ["A", "B", "C"], example: "B" },
+          classType: { type: "string", enum: ["A", "B"], example: "B" },
           cargoType: { type: "string", maxLength: 100, example: "electronics" },
           cargoValue: {
             type: "number",
@@ -204,7 +204,17 @@ export const openApiSpec = {
       },
       PolicyInput: {
         type: "object",
-        required: ["quoteId", "customerName"],
+        required: [
+          "quoteId",
+          "customerName",
+          "proformaInvoice",
+          "mode",
+          "currency",
+          "invoiceValue",
+          "exchangeRate",
+          "startDate",
+          "endDate",
+        ],
         properties: {
           quoteId: {
             type: "string",
@@ -212,6 +222,13 @@ export const openApiSpec = {
             description: "ID of an existing Quote in GENERATED status",
           },
           customerName: { type: "string", maxLength: 100, example: "Acme Co" },
+          proformaInvoice: { type: "string", maxLength: 200 },
+          mode: { type: "string", enum: ["SEA", "AIR"] },
+          currency: { type: "string", enum: ["USD", "GBP", "JPY", "EUR"] },
+          invoiceValue: { type: "number", format: "double", exclusiveMinimum: 0 },
+          exchangeRate: { type: "number", format: "double", exclusiveMinimum: 0 },
+          startDate: { type: "string", format: "date" },
+          endDate: { type: "string", format: "date" },
         },
       },
       PolicyCreateResponse: {
@@ -462,7 +479,7 @@ export const openApiSpec = {
       post: {
         tags: ["Quote"],
         summary: "Create a quote",
-        description: "Premium = cargoValue × rate(classType). A=10%, B=0.7%, C=0.5%.",
+        description: "Premium = cargoValue × the authenticated user's per-class rate (classARate for class A, classBRate for class B).",
         security: [{ BearerAuth: [] }],
         requestBody: {
           required: true,
@@ -695,7 +712,7 @@ export const openApiSpec = {
               schema: {
                 type: "object",
                 properties: {
-                  classType: { type: "string", enum: ["A", "B", "C"] },
+                  classType: { type: "string", enum: ["A", "B"] },
                   cargoType: { type: "string", maxLength: 100 },
                   cargoValue: { type: "number", format: "double", exclusiveMinimum: 0 },
                   origin: { type: "string", maxLength: 100 },
@@ -856,6 +873,24 @@ export const openApiSpec = {
         },
       },
     },
+    "/api/policy/counts": {
+      get: {
+        tags: ["Policy"],
+        summary: "Counts of ALL policies by status (ADMIN)",
+        security: [{ BearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Status counts across every policy",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/PolicyCounts" } },
+            },
+          },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          403: { $ref: "#/components/responses/Forbidden" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
     "/api/policy/pending": {
       get: {
         tags: ["Policy"],
@@ -964,6 +999,36 @@ export const openApiSpec = {
         },
       },
     },
+    "/api/policy/{id}": {
+      get: {
+        tags: ["Policy"],
+        summary: "Get a single policy by id",
+        description:
+          "ADMIN/STAFF can fetch any policy; a regular user can only fetch policies they issued.",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        responses: {
+          200: {
+            description: "Policy",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/Policy" } },
+            },
+          },
+          400: { $ref: "#/components/responses/BadRequest" },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          403: { $ref: "#/components/responses/Forbidden" },
+          404: { $ref: "#/components/responses/NotFound" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
     "/api/policy/certificate/{policyNumber}": {
       get: {
         tags: ["Policy"],
@@ -1061,7 +1126,7 @@ export const openApiSpec = {
       get: {
         tags: ["User"],
         summary: "List users (ADMIN, paginated)",
-        description: "Returns id, fullName, email, and role. No password, wallet, or rates.",
+        description: "Returns id, fullName, email, role, and per-class rates. No password or wallet.",
         security: [{ BearerAuth: [] }],
         parameters: [
           { name: "page", in: "query", schema: { type: "integer", minimum: 1, default: 1 } },
@@ -1089,6 +1154,8 @@ export const openApiSpec = {
                           fullName: { type: "string" },
                           email: { type: "string", format: "email" },
                           role: { $ref: "#/components/schemas/Role" },
+                          classARate: { type: "number", format: "double", minimum: 0, maximum: 1 },
+                          classBRate: { type: "number", format: "double", minimum: 0, maximum: 1 },
                         },
                       },
                     },
@@ -1107,7 +1174,7 @@ export const openApiSpec = {
         tags: ["User"],
         summary: "Create a new user (ADMIN)",
         description:
-          "Admin-only user creation. Admin picks the role; defaults to USER. Strong password rule applies (8-200 chars, mixed case + digit + symbol).",
+          "Admin-only user creation. Admin picks the role (defaults to USER) and the per-class rates (decimal 0-1, e.g. 0.1 = 10%). Strong password rule applies (8-200 chars, mixed case + digit + symbol).",
         security: [{ BearerAuth: [] }],
         requestBody: {
           required: true,
@@ -1115,12 +1182,26 @@ export const openApiSpec = {
             "application/json": {
               schema: {
                 type: "object",
-                required: ["fullName", "email", "password"],
+                required: ["fullName", "email", "password", "classARate", "classBRate"],
                 properties: {
                   fullName: { type: "string", maxLength: 100 },
                   email: { type: "string", format: "email", maxLength: 200 },
                   password: { type: "string", minLength: 8, maxLength: 200 },
                   role: { $ref: "#/components/schemas/Role" },
+                  classARate: {
+                    type: "number",
+                    format: "double",
+                    minimum: 0,
+                    maximum: 1,
+                    example: 0.1,
+                  },
+                  classBRate: {
+                    type: "number",
+                    format: "double",
+                    minimum: 0,
+                    maximum: 1,
+                    example: 0.007,
+                  },
                 },
               },
             },
@@ -1195,6 +1276,75 @@ export const openApiSpec = {
                     fullName: { type: "string" },
                     email: { type: "string", format: "email" },
                     role: { $ref: "#/components/schemas/Role" },
+                  },
+                },
+              },
+            },
+          },
+          400: { $ref: "#/components/responses/BadRequest" },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          403: { $ref: "#/components/responses/Forbidden" },
+          404: { $ref: "#/components/responses/NotFound" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
+    "/api/user/{id}/rates": {
+      patch: {
+        tags: ["User"],
+        summary: "Update a user's per-class rates (ADMIN)",
+        description:
+          "Both rates are decimals between 0 and 1 (0.1 = 10%). Future quotes created by this user will use the new rates; existing quotes are not retroactively recomputed.",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["classARate", "classBRate"],
+                properties: {
+                  classARate: {
+                    type: "number",
+                    format: "double",
+                    minimum: 0,
+                    maximum: 1,
+                    example: 0.1,
+                  },
+                  classBRate: {
+                    type: "number",
+                    format: "double",
+                    minimum: 0,
+                    maximum: 1,
+                    example: 0.007,
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Updated user with new rates",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string", format: "uuid" },
+                    fullName: { type: "string" },
+                    email: { type: "string", format: "email" },
+                    role: { $ref: "#/components/schemas/Role" },
+                    classARate: { type: "number", format: "double" },
+                    classBRate: { type: "number", format: "double" },
                   },
                 },
               },

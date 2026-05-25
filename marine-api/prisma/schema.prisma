@@ -46,19 +46,20 @@ model Policy {
 }
 
 model User {
-  id           String              @id @default(uuid())
-  fullName     String
-  email        String              @unique
-  password     String
-  role         Role
-  classARate   Float               @default(0)
-  classBRate   Float               @default(0)
-  wallet       Float               @default(0)
-  createdAt    DateTime            @default(now())
-  quotes       Quote[]
-  policies     Policy[]
-  transactions WalletTransaction[]
-  AuditLog     AuditLog[]
+  id                  String              @id @default(uuid())
+  fullName            String
+  email               String              @unique
+  password            String
+  role                Role
+  classARate          Float               @default(0)
+  classBRate          Float               @default(0)
+  wallet              Float               @default(0)
+  mustChangePassword  Boolean             @default(false)
+  createdAt           DateTime            @default(now())
+  quotes              Quote[]
+  policies            Policy[]
+  transactions        WalletTransaction[]
+  AuditLog            AuditLog[]
 }
 
 enum Role {

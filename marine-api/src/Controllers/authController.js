@@ -153,6 +153,7 @@ export const updateCurrentUser = async (req, res) => {
         });
       }
       data.password = await bcrypt.hash(newPassword, 12);
+      data.mustChangePassword = false;
     }
 
     if (Object.keys(data).length === 0) {

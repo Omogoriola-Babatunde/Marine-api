@@ -14,9 +14,19 @@ const POLICY_NUMBER_RE = /^POL-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[
 
 export const createPolicy = async (req, res) => {
   try {
-    const { quoteId, customerName } = req.body;
+    const {
+      quoteId,
+      customerName,
+      proformaInvoice,
+      mode,
+      currency,
+      invoiceValue,
+      exchangeRate,
+      startDate,
+      endDate,
+    } = req.body;
 
-    const validation = validatePolicyInput({ quoteId, customerName });
+    const validation = validatePolicyInput(req.body);
     if (!validation.valid) {
       return res.status(400).json({ errors: validation.errors });
     }
@@ -36,6 +46,13 @@ export const createPolicy = async (req, res) => {
           policyNumber,
           quoteId,
           customerName,
+          proformaInvoice: proformaInvoice || null,
+          mode: mode ? mode.toUpperCase() : null,
+          currency: currency ? currency.toUpperCase() : null,
+          invoiceValue: invoiceValue ?? null,
+          exchangeRate: exchangeRate ?? null,
+          startDate: startDate ? new Date(startDate) : null,
+          endDate: endDate ? new Date(endDate) : null,
           status: "PENDING_APPROVAL",
           issuedById: req.user.userId,
         },
@@ -258,6 +275,24 @@ export const getMyPolicies = async (req, res) => {
   }
 };
 
+export const getAllPolicyCounts = async (_req, res) => {
+  try {
+    const grouped = await prisma.policy.groupBy({
+      by: ["status"],
+      _count: { _all: true },
+    });
+    const out = { ALL: 0, PENDING_APPROVAL: 0, APPROVED: 0, REJECTED: 0 };
+    for (const g of grouped) {
+      out[g.status] = g._count._all;
+      out.ALL += g._count._all;
+    }
+    res.json(out);
+  } catch (error) {
+    console.error("getAllPolicyCounts error:", error);
+    res.status(500).json({ error: "Failed to fetch policy counts" });
+  }
+};
+
 export const getMyPolicyCounts = async (req, res) => {
   try {
     const grouped = await prisma.policy.groupBy({
@@ -312,6 +347,36 @@ export const getMyPolicyTimeseries = async (req, res) => {
   } catch (error) {
     console.error("getMyPolicyTimeseries error:", error);
     res.status(500).json({ error: "Failed to fetch policy timeseries" });
+  }
+};
+
+export const getPolicyById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!isUuid(id)) {
+      return res.status(400).json({ error: "Invalid policy id" });
+    }
+
+    const policy = await prisma.policy.findUnique({
+      where: { id },
+      include: {
+        quote: true,
+        issuedBy: { select: { id: true, fullName: true, email: true, role: true } },
+      },
+    });
+    if (!policy) {
+      return res.status(404).json({ error: "Policy not found" });
+    }
+
+    const isPrivileged = req.user.role === "ADMIN" || req.user.role === "STAFF";
+    if (!isPrivileged && policy.issuedById !== req.user.userId) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    res.json(policy);
+  } catch (error) {
+    console.error("getPolicyById error:", error);
+    res.status(500).json({ error: "Failed to fetch policy" });
   }
 };
 

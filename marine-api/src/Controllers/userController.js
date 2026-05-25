@@ -9,6 +9,8 @@ const ALLOWED_ROLES = ["ADMIN", "STAFF", "USER"];
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+const isRateDecimal = (v) => Number.isFinite(v) && v >= 0 && v <= 1;
+
 const isStrongPassword = (s) =>
   typeof s === "string" &&
   s.length >= 8 &&
@@ -26,7 +28,7 @@ const sanitizeUser = (user) => {
 
 export const createUser = async (req, res) => {
   try {
-    const { fullName, email, password, role } = req.body;
+    const { fullName, email, password, role, classARate, classBRate } = req.body;
 
     if (!fullName || typeof fullName !== "string" || fullName.length > 100) {
       return res.status(400).json({ error: "fullName is required (max 100 chars)" });
@@ -46,6 +48,16 @@ export const createUser = async (req, res) => {
     if (!ALLOWED_ROLES.includes(finalRole)) {
       return res.status(400).json({ error: `role must be one of ${ALLOWED_ROLES.join(", ")}` });
     }
+    if (!isRateDecimal(classARate)) {
+      return res
+        .status(400)
+        .json({ error: "classARate is required and must be a decimal between 0 and 1" });
+    }
+    if (!isRateDecimal(classBRate)) {
+      return res
+        .status(400)
+        .json({ error: "classBRate is required and must be a decimal between 0 and 1" });
+    }
 
     const emailTaken = await prisma.user.findUnique({ where: { email } });
     if (emailTaken) {
@@ -55,19 +67,80 @@ export const createUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     const user = await prisma.user.create({
-      data: { fullName, email, password: hashedPassword, role: finalRole },
+      data: {
+        fullName,
+        email,
+        password: hashedPassword,
+        role: finalRole,
+        classARate,
+        classBRate,
+        mustChangePassword: true,
+      },
     });
 
     await createAuditLog({
       userId: req.user.userId,
       action: "CREATE_USER",
-      description: `Created user ${user.id} (${user.email}) with role ${finalRole}`,
+      description: `Created user ${user.id} (${user.email}) with role ${finalRole}, rates A=${classARate}, B=${classBRate}`,
     });
 
     res.status(201).json(sanitizeUser(user));
   } catch (error) {
     console.error("createUser error:", error);
     res.status(500).json({ error: "Failed to create user" });
+  }
+};
+
+export const updateUserRates = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!isUuid(id)) {
+      return res.status(400).json({ error: "Invalid user id" });
+    }
+
+    const { classARate, classBRate } = req.body;
+    if (!isRateDecimal(classARate)) {
+      return res
+        .status(400)
+        .json({ error: "classARate is required and must be a decimal between 0 and 1" });
+    }
+    if (!isRateDecimal(classBRate)) {
+      return res
+        .status(400)
+        .json({ error: "classBRate is required and must be a decimal between 0 and 1" });
+    }
+
+    const existing = await prisma.user.findUnique({
+      where: { id },
+      select: { classARate: true, classBRate: true },
+    });
+    if (!existing) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const updated = await prisma.user.update({
+      where: { id },
+      data: { classARate, classBRate },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        role: true,
+        classARate: true,
+        classBRate: true,
+      },
+    });
+
+    await createAuditLog({
+      userId: req.user.userId,
+      action: "UPDATE_USER_RATES",
+      description: `Changed rates of user ${id}: A ${existing.classARate}→${classARate}, B ${existing.classBRate}→${classBRate}`,
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error("updateUserRates error:", error);
+    res.status(500).json({ error: "Failed to update user rates" });
   }
 };
 
@@ -92,7 +165,14 @@ export const listUsers = async (req, res) => {
         skip,
         take: limit,
         orderBy: { createdAt: "desc" },
-        select: { id: true, fullName: true, email: true, role: true },
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          role: true,
+          classARate: true,
+          classBRate: true,
+        },
       }),
       prisma.user.count({ where }),
     ]);
