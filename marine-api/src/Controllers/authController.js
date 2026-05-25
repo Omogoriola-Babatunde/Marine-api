@@ -16,7 +16,8 @@ export const registerUser = async (req, res) => {
                 email,
                 password: hashedPassword,
                 role,
-                rate
+                classARate,
+                classBRate,
             }
         });
 

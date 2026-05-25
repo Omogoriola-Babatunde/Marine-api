@@ -38,7 +38,7 @@ model Policy {
   startDate     DateTime
   endDate     DateTime
   naicomId    String?
-  status       String
+  status       PolicyStatus
   createdAt    DateTime @default(now())
   issuedById   String
   issuedBy     User     @relation(fields: [issuedById], references: [id])
@@ -60,6 +60,7 @@ model User {
   policies     Policy[]
   transactions WalletTransaction[]
   AuditLog     AuditLog[]
+  notifications Notification[]
 }
 
 enum Role {
@@ -103,4 +104,15 @@ enum QuoteStatus {
   GENERATED
   CONVERTED
   EXPIRED
+}
+
+model Notification{
+  id    String
+  userId  String
+  user    User @relation(fields:[userId], references: [id])
+  title   String
+  message String
+  isRead  Boolean @default(false)
+  createdAt DateTime @default(now())
+
 }

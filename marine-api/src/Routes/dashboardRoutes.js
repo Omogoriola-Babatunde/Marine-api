@@ -8,3 +8,5 @@ const router = express.Router();
 router.get("/admin", authenticateToken, authorizeRoles("ADMIN"), getAdmindashboard);
 
 export default router;
+
+// this sucks
