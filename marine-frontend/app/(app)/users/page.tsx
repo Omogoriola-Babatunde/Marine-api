@@ -4,6 +4,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import { CreateUserDialog } from "@/components/create-user-dialog";
 import { DataTablePagination } from "@/components/data-table-pagination";
+import { NoPermissionCard } from "@/components/no-permission-card";
 import { SiteHeader } from "@/components/site-header";
 import { StatusTabs } from "@/components/status-tabs";
 import { UserRowActions } from "@/components/user-row-actions";
@@ -87,9 +88,7 @@ export default function UsersPage() {
     return (
       <>
         <SiteHeader title="Users" />
-        <div className="mx-auto w-full max-w-2xl px-4 py-10 text-sm text-muted-foreground">
-          You don&apos;t have permission to view this page.
-        </div>
+        <NoPermissionCard />
       </>
     );
   }

@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
+import { NoPermissionCard } from "@/components/no-permission-card";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -162,12 +163,21 @@ export default function WalletPage() {
   const user = useAuthUser();
   const isAdmin = user?.role === "ADMIN";
 
+  if (user && !isAdmin) {
+    return (
+      <>
+        <SiteHeader title="Wallet" />
+        <NoPermissionCard />
+      </>
+    );
+  }
+
   return (
     <>
       <SiteHeader title="Wallet" />
       <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6">
         <BalanceCard />
-        {isAdmin && <AdminTopupCard />}
+        <AdminTopupCard />
       </div>
     </>
   );

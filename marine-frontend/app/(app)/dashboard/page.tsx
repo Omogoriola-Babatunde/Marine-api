@@ -2,6 +2,7 @@
 
 import { ActivityArea } from "@/components/charts/activity-area";
 import { PremiumByClassBar } from "@/components/charts/premium-by-class-bar";
+import { NoPermissionCard } from "@/components/no-permission-card";
 import { SectionCards } from "@/components/section-cards";
 import { SiteHeader } from "@/components/site-header";
 import { useAuthUser } from "@/hooks/use-auth-user";
@@ -14,9 +15,7 @@ export default function Page() {
     return (
       <>
         <SiteHeader title="Dashboard" />
-        <div className="mx-auto w-full max-w-2xl px-4 py-10 text-sm text-muted-foreground">
-          You don&apos;t have permission to view this page.
-        </div>
+        <NoPermissionCard />
       </>
     );
   }

@@ -37,7 +37,7 @@ const NAV_ITEMS: NavItem[] = [
   { title: "Dashboard", href: "/dashboard", icon: <LayoutDashboardIcon />, adminOnly: true },
   { title: "Quotes", href: "/quotes", icon: <FileTextIcon /> },
   { title: "Policies", href: "/policies", icon: <ScrollTextIcon /> },
-  { title: "Wallet", href: "/wallet", icon: <WalletIcon /> },
+  { title: "Wallet", href: "/wallet", icon: <WalletIcon />, adminOnly: true },
   { title: "Users", href: "/users", icon: <UsersIcon />, adminOnly: true },
 ];
 
