@@ -266,4 +266,14 @@ export async function updateUserRates(
   });
 }
 
+export async function getNotifications(): Promise<import("@/lib/types").Notification[]> {
+  return fetchJson("/api/notifications");
+}
+
+export async function markNotificationAsRead(
+  id: string
+): Promise<import("@/lib/types").Notification> {
+  return fetchJson(`/api/notifications/${id}/read`, { method: "PATCH" });
+}
+
 export type { Pagination, Policy, Quote };

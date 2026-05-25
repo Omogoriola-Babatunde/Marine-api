@@ -25,6 +25,7 @@ interface DataTableProps<TData, TValue> {
   isLoading?: boolean;
   emptyMessage?: string;
   skeletonRows?: number;
+  onRowClick?: (row: TData) => void;
 }
 
 const DEFAULT_SKELETON_KEYS = ["s1", "s2", "s3", "s4", "s5"];
@@ -35,6 +36,7 @@ export function DataTable<TData, TValue>({
   isLoading = false,
   emptyMessage = "No results.",
   skeletonRows = 5,
+  onRowClick,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
@@ -76,7 +78,12 @@ export function DataTable<TData, TValue>({
             ))
           ) : table.getRowModel().rows.length > 0 ? (
             table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+              <TableRow
+                key={row.id}
+                data-state={row.getIsSelected() && "selected"}
+                onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+                className={onRowClick ? "cursor-pointer" : undefined}
+              >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

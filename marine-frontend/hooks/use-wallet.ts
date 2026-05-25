@@ -18,6 +18,7 @@ export function useWalletTopup() {
     onSuccess: () => {
       toast.success("Wallet topped up");
       queryClient.invalidateQueries({ queryKey: ["wallet", "balance"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
     onError: (err: Error) => {
       toast.error(err.message);

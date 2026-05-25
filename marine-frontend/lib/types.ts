@@ -193,3 +193,16 @@ export interface UserCounts {
   STAFF: number;
   USER: number;
 }
+
+export type NotificationLinkType = "POLICY";
+
+export interface Notification {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  linkType: NotificationLinkType | string | null;
+  linkId: string | null;
+  isRead: boolean;
+  createdAt: string;
+}

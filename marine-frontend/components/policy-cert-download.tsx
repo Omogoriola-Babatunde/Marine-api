@@ -17,27 +17,25 @@ export function PolicyCertDownload({
   if (isDisabled) {
     return (
       <Button
-        variant="ghost"
-        size="sm"
         disabled
         title={disabled ? "Certificate is available once the policy is APPROVED" : undefined}
       >
-        <DownloadIcon />
-        {isLoading ? "…" : "Cert"}
+        <DownloadIcon className="size-4" />
+        {isLoading ? "Preparing certificate…" : "Download certificate"}
       </Button>
     );
   }
 
   return (
-    <Button asChild variant="ghost" size="sm">
+    <Button asChild>
       <a
         href={url ?? "#"}
         download={`certificate-${policyNumber}.pdf`}
         target="_blank"
         rel="noreferrer"
       >
-        <DownloadIcon />
-        Cert
+        <DownloadIcon className="size-4" />
+        Download Certificate
       </a>
     </Button>
   );

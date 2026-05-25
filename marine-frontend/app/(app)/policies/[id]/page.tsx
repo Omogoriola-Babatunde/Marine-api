@@ -125,15 +125,21 @@ export default function PolicyDetailPage({
               <CardHeader>
                 <CardTitle>Invoice</CardTitle>
               </CardHeader>
-              <CardContent className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
-                <Field label="Proforma #">{policy.proformaInvoice ?? "—"}</Field>
-                <Field label="Currency">{policy.currency ?? "—"}</Field>
-                <Field label="Invoice value">
-                  {policy.invoiceValue != null
-                    ? `${policy.currency ?? ""} ${policy.invoiceValue.toLocaleString()}`.trim()
-                    : "—"}
+              <CardContent className="space-y-4 text-sm">
+                <Field label="Proforma #">
+                  <span className="font-mono break-all">
+                    {policy.proformaInvoice ?? "—"}
+                  </span>
                 </Field>
-                <Field label="Exchange rate">{policy.exchangeRate ?? "—"}</Field>
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                  <Field label="Currency">{policy.currency ?? "—"}</Field>
+                  <Field label="Invoice value">
+                    {policy.invoiceValue != null
+                      ? `${policy.currency ?? ""} ${policy.invoiceValue.toLocaleString()}`.trim()
+                      : "—"}
+                  </Field>
+                  <Field label="Exchange rate">{policy.exchangeRate ?? "—"}</Field>
+                </div>
               </CardContent>
             </Card>
 

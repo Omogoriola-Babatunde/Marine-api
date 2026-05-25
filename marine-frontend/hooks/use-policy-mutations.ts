@@ -9,6 +9,7 @@ function invalidateAfterPolicyChange(queryClient: ReturnType<typeof useQueryClie
   queryClient.invalidateQueries({ queryKey: ["policies", "mine"] });
   queryClient.invalidateQueries({ queryKey: ["policy"] });
   queryClient.invalidateQueries({ queryKey: ["wallet", "balance"] });
+  queryClient.invalidateQueries({ queryKey: ["notifications"] });
 }
 
 export function useApprovePolicy() {
