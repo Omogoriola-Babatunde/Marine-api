@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDashboardStats } from "@/hooks/use-dashboard-stats";
+import { ngn } from "@/lib/format";
 
-const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 const number = new Intl.NumberFormat("en-US");
 
 function StatValue({ value, format }: { value: number | null; format: (n: number) => string }) {
@@ -29,7 +29,7 @@ export function SectionCards() {
         <CardHeader>
           <CardDescription>Wallet balance</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            <StatValue value={walletBalance} format={(n) => usd.format(n)} />
+            <StatValue value={walletBalance} format={(n) => ngn(n)} />
           </CardTitle>
           <CardAction>
             <WalletIcon className="size-5 text-muted-foreground" />

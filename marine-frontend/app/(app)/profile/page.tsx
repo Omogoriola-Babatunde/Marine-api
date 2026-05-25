@@ -7,9 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProfile } from "@/hooks/use-profile";
+import { ngn } from "@/lib/format";
 import type { AuthUser, UserRole } from "@/lib/types";
-
-const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 
 const roleVariant: Record<UserRole, "default" | "secondary" | "outline"> = {
   ADMIN: "default",
@@ -34,7 +33,7 @@ function AccountSummaryCard({ user }: { user: AuthUser }) {
           </div>
           <div>
             <dt className="text-muted-foreground">Wallet</dt>
-            <dd className="mt-1 font-medium tabular-nums">{usd.format(user.wallet)}</dd>
+            <dd className="mt-1 font-medium tabular-nums">{ngn(user.wallet)}</dd>
           </div>
           <div className="sm:col-span-2">
             <dt className="text-muted-foreground">Member since</dt>

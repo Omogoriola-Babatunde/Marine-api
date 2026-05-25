@@ -20,8 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { useUsers } from "@/hooks/use-users";
 import { useWalletBalance, useWalletTopup } from "@/hooks/use-wallet";
-
-const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+import { ngn } from "@/lib/format";
 
 const topupSchema = z.object({
   userId: z.string().uuid("Must be a valid user UUID"),
@@ -39,7 +38,7 @@ function BalanceCard() {
       <CardHeader>
         <CardDescription>Available balance</CardDescription>
         <CardTitle className="text-4xl font-semibold tabular-nums">
-          {isLoading || !data ? <Skeleton className="h-10 w-40" /> : usd.format(data.wallet)}
+          {isLoading || !data ? <Skeleton className="h-10 w-40" /> : ngn(data.wallet)}
         </CardTitle>
       </CardHeader>
       <CardContent className="text-sm text-muted-foreground">
@@ -122,7 +121,7 @@ function AdminTopupCard() {
               )}
             </Field>
             <Field>
-              <FieldLabel htmlFor="amount">Amount (USD)</FieldLabel>
+              <FieldLabel htmlFor="amount">Amount (₦)</FieldLabel>
               <Input
                 id="amount"
                 type="number"

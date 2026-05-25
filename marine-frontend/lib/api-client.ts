@@ -90,6 +90,10 @@ export async function issuePolicy(input: IssuePolicyInput): Promise<IssuePolicyR
   });
 }
 
+export async function getPolicyById(id: string): Promise<Policy> {
+  return fetchJson<Policy>(`/api/policy/${id}`);
+}
+
 export async function fetchCertificateBlob(policyNumber: string): Promise<Blob> {
   const token = getToken();
   const headers = new Headers();
@@ -154,12 +158,20 @@ export async function getMyPolicies(q: StatusQuery = {}): Promise<PolicyListResp
   return fetchJson<PolicyListResponse>(`/api/policy/mine${buildQuery(q)}`);
 }
 
+export async function getAllPolicies(q: StatusQuery = {}): Promise<PolicyListResponse> {
+  return fetchJson<PolicyListResponse>(`/api/policy${buildQuery(q)}`);
+}
+
 export async function getMyQuoteCounts(): Promise<import("@/lib/types").QuoteCounts> {
   return fetchJson("/api/quote/mine/counts");
 }
 
 export async function getMyPolicyCounts(): Promise<import("@/lib/types").PolicyCounts> {
   return fetchJson("/api/policy/mine/counts");
+}
+
+export async function getAllPolicyCounts(): Promise<import("@/lib/types").PolicyCounts> {
+  return fetchJson("/api/policy/counts");
 }
 
 export async function getUserCounts(): Promise<import("@/lib/types").UserCounts> {
@@ -241,6 +253,16 @@ export async function createUser(
   return fetchJson("/api/user", {
     method: "POST",
     body: JSON.stringify(input),
+  });
+}
+
+export async function updateUserRates(
+  id: string,
+  rates: import("@/lib/types").UpdateUserRatesInput
+): Promise<import("@/lib/types").UserListItem> {
+  return fetchJson(`/api/user/${id}/rates`, {
+    method: "PATCH",
+    body: JSON.stringify(rates),
   });
 }
 

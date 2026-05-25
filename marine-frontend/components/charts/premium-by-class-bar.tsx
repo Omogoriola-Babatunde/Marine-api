@@ -18,12 +18,7 @@ import {
 } from "@/components/ui/chart";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getMyQuoteCounts } from "@/lib/api-client";
-
-const usd = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-});
+import { ngn, ngnShort } from "@/lib/format";
 
 const chartConfig = {
   premium: { label: "Premium", color: "var(--chart-1)" },
@@ -39,11 +34,9 @@ export function PremiumByClassBar() {
     if (!data?.byClass) return [];
     const a = data.byClass.A ?? { premium: 0, count: 0, cargoValue: 0 };
     const b = data.byClass.B ?? { premium: 0, count: 0, cargoValue: 0 };
-    const c = data.byClass.C ?? { premium: 0, count: 0, cargoValue: 0 };
     return [
       { class: "A", premium: a.premium, count: a.count },
       { class: "B", premium: b.premium, count: b.count },
-      { class: "C", premium: c.premium, count: c.count },
     ];
   }, [data]);
 
@@ -70,13 +63,13 @@ export function PremiumByClassBar() {
               <YAxis
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(v) => usd.format(Number(v))}
+                tickFormatter={(v) => ngnShort(Number(v))}
                 width={70}
               />
               <ChartTooltip
                 content={
                   <ChartTooltipContent
-                    formatter={(value) => usd.format(Number(value))}
+                    formatter={(value) => ngn(Number(value))}
                   />
                 }
               />

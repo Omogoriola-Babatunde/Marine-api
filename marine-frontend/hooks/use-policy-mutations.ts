@@ -7,6 +7,7 @@ import type { Policy } from "@/lib/types";
 
 function invalidateAfterPolicyChange(queryClient: ReturnType<typeof useQueryClient>) {
   queryClient.invalidateQueries({ queryKey: ["policies", "mine"] });
+  queryClient.invalidateQueries({ queryKey: ["policy"] });
   queryClient.invalidateQueries({ queryKey: ["wallet", "balance"] });
 }
 

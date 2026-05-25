@@ -1,4 +1,4 @@
-export type QuoteClassType = "A" | "B" | "C";
+export type QuoteClassType = "A" | "B";
 
 export type QuoteStatus = "GENERATED" | "CONVERTED" | "EXPIRED";
 
@@ -23,6 +23,20 @@ export interface Policy {
   createdAt: string;
   quote?: Quote;
   issuedById?: string;
+  issuedBy?: {
+    id: string;
+    fullName: string;
+    email: string;
+    role: UserRole;
+  };
+  proformaInvoice?: string | null;
+  mode?: ShipmentMode | null;
+  currency?: PolicyCurrency | null;
+  invoiceValue?: number | null;
+  exchangeRate?: number | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  naicomId?: string | null;
 }
 
 export interface CreateQuoteInput {
@@ -33,9 +47,19 @@ export interface CreateQuoteInput {
   destination: string;
 }
 
+export type ShipmentMode = "SEA" | "AIR";
+export type PolicyCurrency = "USD" | "GBP" | "JPY" | "EUR";
+
 export interface IssuePolicyInput {
   quoteId: string;
   customerName: string;
+  proformaInvoice: string;
+  mode: ShipmentMode;
+  currency: PolicyCurrency;
+  invoiceValue: number;
+  exchangeRate: number;
+  startDate: string;
+  endDate: string;
 }
 
 export interface IssuePolicyResponse {
@@ -56,6 +80,9 @@ export interface AuthUser {
   email: string;
   role: UserRole;
   wallet: number;
+  classARate: number;
+  classBRate: number;
+  mustChangePassword: boolean;
   createdAt: string;
 }
 
@@ -74,6 +101,13 @@ export interface CreateUserInput {
   email: string;
   password: string;
   role?: UserRole;
+  classARate: number;
+  classBRate: number;
+}
+
+export interface UpdateUserRatesInput {
+  classARate: number;
+  classBRate: number;
 }
 
 export interface ForgotPasswordInput {
@@ -112,6 +146,8 @@ export interface UserListItem {
   fullName: string;
   email: string;
   role: UserRole;
+  classARate: number;
+  classBRate: number;
 }
 
 export interface UserListResponse {
@@ -130,7 +166,7 @@ export interface QuoteCounts {
   GENERATED: number;
   CONVERTED: number;
   EXPIRED: number;
-  byClass: { A: QuoteClassBucket; B: QuoteClassBucket; C: QuoteClassBucket };
+  byClass: { A: QuoteClassBucket; B: QuoteClassBucket };
   totalPremium: number;
 }
 

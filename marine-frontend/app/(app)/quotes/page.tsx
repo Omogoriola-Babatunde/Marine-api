@@ -15,7 +15,7 @@ import { useQuoteStatusCounts } from "@/hooks/use-status-counts";
 import { getMyQuotes } from "@/lib/api-client";
 import type { Quote } from "@/lib/types";
 
-const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+import { ngn } from "@/lib/format";
 
 const statusVariant: Record<string, "default" | "secondary" | "outline"> = {
   GENERATED: "secondary",
@@ -50,14 +50,14 @@ const columns: ColumnDef<Quote>[] = [
     accessorKey: "cargoValue",
     header: () => <div className="text-right">Value</div>,
     cell: ({ row }) => (
-      <div className="text-right tabular-nums">{usd.format(row.original.cargoValue)}</div>
+      <div className="text-right tabular-nums">{ngn(row.original.cargoValue)}</div>
     ),
   },
   {
     accessorKey: "premium",
     header: () => <div className="text-right">Premium</div>,
     cell: ({ row }) => (
-      <div className="text-right tabular-nums">{usd.format(row.original.premium)}</div>
+      <div className="text-right tabular-nums">{ngn(row.original.premium)}</div>
     ),
   },
   {

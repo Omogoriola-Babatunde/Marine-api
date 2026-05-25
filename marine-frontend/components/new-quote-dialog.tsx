@@ -28,7 +28,7 @@ export function NewQuoteDialog() {
         <DialogHeader>
           <DialogTitle>Create quote</DialogTitle>
           <DialogDescription>
-            Premium is calculated from class × cargo value. A=10%, B=0.7%, C=0.5%.
+            Premium is calculated as cargo value × your class rate.
           </DialogDescription>
         </DialogHeader>
         <QuoteForm />

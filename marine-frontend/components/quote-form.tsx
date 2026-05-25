@@ -19,17 +19,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuthUser } from "@/hooks/use-auth-user";
 import { useCreateQuote } from "@/hooks/use-create-quote";
 import { type CreateQuoteSchema, createQuoteSchema } from "@/lib/schemas";
 
-const CLASS_OPTIONS = [
-  { value: "A", label: "A — Premium (10%)" },
-  { value: "B", label: "B — Standard (0.7%)" },
-  { value: "C", label: "C — Basic (0.5%)" },
-] as const;
+const formatRate = (rate: number | undefined): string => {
+  if (rate == null || !Number.isFinite(rate)) return "—";
+  const pct = rate * 100;
+  return Number.isInteger(pct) ? `${pct}%` : `${pct.toFixed(2).replace(/\.?0+$/, "")}%`;
+};
 
 export function QuoteForm() {
   const mutation = useCreateQuote();
+  const me = useAuthUser();
+  const classOptions = [
+    { value: "A", label: `Class A (${formatRate(me?.classARate)})` },
+    { value: "B", label: `Class B (${formatRate(me?.classBRate)})` },
+  ] as const;
   const form = useForm<CreateQuoteSchema>({
     resolver: zodResolver(createQuoteSchema),
     defaultValues: {
@@ -66,7 +72,7 @@ export function QuoteForm() {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {CLASS_OPTIONS.map((opt) => (
+                  {classOptions.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>
                       {opt.label}
                     </SelectItem>
@@ -97,7 +103,7 @@ export function QuoteForm() {
           name="cargoValue"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Cargo value (USD)</FormLabel>
+              <FormLabel>Cargo value (₦)</FormLabel>
               <FormControl>
                 <Input
                   type="number"

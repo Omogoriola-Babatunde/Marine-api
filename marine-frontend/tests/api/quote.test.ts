@@ -43,7 +43,7 @@ describe("POST /api/quote (proxy)", () => {
   });
 
   it("propagates 4xx body and status from backend", async () => {
-    const errBody = { errors: ["classType must be A, B, or C"] };
+    const errBody = { errors: ["classType must be A or B"] };
     global.fetch = vi
       .fn()
       .mockResolvedValue(new Response(JSON.stringify(errBody), { status: 400 }));

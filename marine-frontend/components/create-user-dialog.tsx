@@ -42,19 +42,34 @@ export function CreateUserDialog() {
   } = useForm<CreateUserSchema>({
     resolver: zodResolver(createUserSchema),
     mode: "onBlur",
-    defaultValues: { fullName: "", email: "", password: "", role: "USER" },
+    defaultValues: {
+      fullName: "",
+      email: "",
+      password: "",
+      role: "USER",
+      classARatePct: 10,
+      classBRatePct: 0.7,
+    },
   });
 
   const role = watch("role");
 
   const onSubmit = (values: CreateUserSchema) => {
     if (mutation.isPending) return;
-    mutation.mutate(values, {
-      onSuccess: () => {
-        reset();
-        setOpen(false);
+    const { classARatePct, classBRatePct, ...rest } = values;
+    mutation.mutate(
+      {
+        ...rest,
+        classARate: classARatePct / 100,
+        classBRate: classBRatePct / 100,
       },
-    });
+      {
+        onSuccess: () => {
+          reset();
+          setOpen(false);
+        },
+      },
+    );
   };
 
   return (
@@ -133,6 +148,44 @@ export function CreateUserDialog() {
                 </FieldDescription>
               )}
             </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field>
+                <FieldLabel htmlFor="classARatePct">Class A rate (%)</FieldLabel>
+                <Input
+                  id="classARatePct"
+                  type="number"
+                  step="0.01"
+                  min={0}
+                  max={100}
+                  disabled={mutation.isPending}
+                  aria-invalid={!!errors.classARatePct}
+                  {...register("classARatePct", { valueAsNumber: true })}
+                />
+                {errors.classARatePct && (
+                  <FieldDescription className="text-destructive">
+                    {errors.classARatePct.message}
+                  </FieldDescription>
+                )}
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="classBRatePct">Class B rate (%)</FieldLabel>
+                <Input
+                  id="classBRatePct"
+                  type="number"
+                  step="0.01"
+                  min={0}
+                  max={100}
+                  disabled={mutation.isPending}
+                  aria-invalid={!!errors.classBRatePct}
+                  {...register("classBRatePct", { valueAsNumber: true })}
+                />
+                {errors.classBRatePct && (
+                  <FieldDescription className="text-destructive">
+                    {errors.classBRatePct.message}
+                  </FieldDescription>
+                )}
+              </Field>
+            </div>
             <Field>
               <FieldLabel htmlFor="role">Role</FieldLabel>
               <Select

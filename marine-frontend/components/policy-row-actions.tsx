@@ -1,6 +1,7 @@
 "use client";
 
 import { MoreHorizontalIcon } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import {
   ApprovePolicyDialog,
@@ -43,6 +44,10 @@ export function PolicyRowActions({ policy }: { policy: Policy }) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem asChild>
+              <Link href={`/policies/${policy.id}`}>View</Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             {isAdmin && (
               <>
                 <DropdownMenuItem

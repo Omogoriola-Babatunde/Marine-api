@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { DataTablePagination } from "@/components/data-table-pagination";
 import { PolicyRowActions } from "@/components/policy-row-actions";
@@ -9,11 +10,10 @@ import { SiteHeader } from "@/components/site-header";
 import { StatusTabs } from "@/components/status-tabs";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
-import { usePolicyStatusCounts } from "@/hooks/use-status-counts";
-import { getMyPolicies } from "@/lib/api-client";
-import type { Policy } from "@/lib/types";
-
-const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+import { useAuthUser } from "@/hooks/use-auth-user";
+import { getAllPolicies, getAllPolicyCounts, getMyPolicies, getMyPolicyCounts } from "@/lib/api-client";
+import { ngn } from "@/lib/format";
+import type { Policy, PolicyCounts } from "@/lib/types";
 
 const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   PENDING_APPROVAL: "secondary",
@@ -21,18 +21,30 @@ const statusVariant: Record<string, "default" | "secondary" | "destructive" | "o
   REJECTED: "destructive",
 };
 
-const columns: ColumnDef<Policy>[] = [
+const baseColumns: ColumnDef<Policy>[] = [
   {
     accessorKey: "policyNumber",
     header: "Policy",
     cell: ({ row }) => (
-      <span className="font-mono text-xs">{row.original.policyNumber}</span>
+      <Link
+        href={`/policies/${row.original.id}`}
+        className="font-mono text-xs underline-offset-4 hover:underline"
+      >
+        {row.original.policyNumber}
+      </Link>
     ),
   },
   {
     accessorKey: "customerName",
     header: "Customer",
-    cell: ({ row }) => <span className="font-medium">{row.original.customerName}</span>,
+    cell: ({ row }) => (
+      <Link
+        href={`/policies/${row.original.id}`}
+        className="font-medium underline-offset-4 hover:underline"
+      >
+        {row.original.customerName}
+      </Link>
+    ),
   },
   {
     id: "route",
@@ -50,7 +62,7 @@ const columns: ColumnDef<Policy>[] = [
     header: () => <div className="text-right">Premium</div>,
     cell: ({ row }) => (
       <div className="text-right tabular-nums">
-        {row.original.quote ? usd.format(row.original.quote.premium) : "—"}
+        {row.original.quote ? ngn(row.original.quote.premium) : "—"}
       </div>
     ),
   },
@@ -71,21 +83,55 @@ const columns: ColumnDef<Policy>[] = [
   },
 ];
 
+const issuedByColumn: ColumnDef<Policy> = {
+  id: "issuedBy",
+  header: "Issued by",
+  cell: ({ row }) => (
+    <span className="text-sm text-muted-foreground">
+      {row.original.issuedBy?.fullName ?? "—"}
+    </span>
+  ),
+};
+
+const EMPTY_COUNTS: PolicyCounts = {
+  ALL: 0,
+  PENDING_APPROVAL: 0,
+  APPROVED: 0,
+  REJECTED: 0,
+};
+
 export default function PoliciesPage() {
+  const me = useAuthUser();
+  const isAdmin = me?.role === "ADMIN";
   const [status, setStatus] = useState<string>("ALL");
   const [page, setPage] = useState(1);
   const limit = 10;
-  const counts = usePolicyStatusCounts();
+
+  const scope = isAdmin ? "all" : "mine";
+
+  const countsQuery = useQuery({
+    queryKey: ["policies", scope, "counts"],
+    queryFn: () => (isAdmin ? getAllPolicyCounts() : getMyPolicyCounts()),
+  });
+  const counts = countsQuery.data ?? EMPTY_COUNTS;
 
   const query = useQuery({
-    queryKey: ["policies", "mine", status, page, limit],
-    queryFn: () =>
-      getMyPolicies({
+    queryKey: ["policies", scope, status, page, limit],
+    queryFn: () => {
+      const args = {
         ...(status === "ALL" ? {} : { status }),
         page,
         limit,
-      }),
+      };
+      return isAdmin ? getAllPolicies(args) : getMyPolicies(args);
+    },
   });
+
+  const columns = useMemo<ColumnDef<Policy>[]>(() => {
+    if (!isAdmin) return baseColumns;
+    // Insert "Issued by" right after the Customer column.
+    return [...baseColumns.slice(0, 2), issuedByColumn, ...baseColumns.slice(2)];
+  }, [isAdmin]);
 
   const tabs = useMemo(
     () => [
@@ -114,7 +160,7 @@ export default function PoliciesPage() {
           columns={columns}
           data={query.data?.data ?? []}
           isLoading={query.isLoading}
-          emptyMessage="No policies yet."
+          emptyMessage={isAdmin ? "No policies in the system yet." : "No policies yet."}
         />
 
         {query.data && (

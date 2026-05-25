@@ -14,9 +14,9 @@ describe("createQuoteSchema", () => {
     expect(createQuoteSchema.safeParse(valid).success).toBe(true);
   });
 
-  it("rejects classType outside A|B|C", () => {
-    const r = createQuoteSchema.safeParse({ ...valid, classType: "D" });
-    expect(r.success).toBe(false);
+  it("rejects classType outside A|B", () => {
+    expect(createQuoteSchema.safeParse({ ...valid, classType: "C" }).success).toBe(false);
+    expect(createQuoteSchema.safeParse({ ...valid, classType: "D" }).success).toBe(false);
   });
 
   it("rejects cargoValue <= 0", () => {
