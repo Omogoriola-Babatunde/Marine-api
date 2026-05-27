@@ -18,7 +18,7 @@ router.get("/", authenticateToken, authorizeRoles("ADMIN"), async (req, res) => 
         take: limit,
         include: {
           user: {
-            select: { id: true, username: true, email: true, role: true },
+            select: { id: true, fullName: true, email: true, role: true },
           },
         },
         orderBy: { createdAt: "desc" },

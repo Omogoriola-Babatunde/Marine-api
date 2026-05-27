@@ -14,6 +14,7 @@ export function useCreateQuote() {
     mutationFn: createQuote,
     onSuccess: (quote) => {
       queryClient.setQueryData(["quote", quote.id], quote);
+      queryClient.invalidateQueries({ queryKey: ["quotes", "mine"] });
       router.push(`/quotes/${quote.id}`);
     },
     onError: (err) => {

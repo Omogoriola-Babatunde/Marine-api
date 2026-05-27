@@ -14,6 +14,7 @@ export const openApiSpec = {
     { name: "Auth", description: "Registration, login, password reset" },
     { name: "Quote", description: "Insurance quotes & premium calculation" },
     { name: "Policy", description: "Policy issuance, approval, certificates" },
+    { name: "Notification", description: "In-app notifications" },
     { name: "Reports", description: "Production reports (admin)" },
     { name: "Audit", description: "Audit log (admin)" },
   ],
@@ -49,8 +50,8 @@ export const openApiSpec = {
         type: "object",
         properties: {
           id: { type: "string", format: "uuid" },
-          username: { type: "string" },
-          email: { type: "string", nullable: true },
+          fullName: { type: "string" },
+          email: { type: "string", format: "email" },
           role: { $ref: "#/components/schemas/Role" },
           classARate: { type: "number", format: "double" },
           classBRate: { type: "number", format: "double" },
@@ -60,18 +61,18 @@ export const openApiSpec = {
       },
       RegisterInput: {
         type: "object",
-        required: ["username", "password"],
+        required: ["fullName", "email", "password"],
         properties: {
-          username: { type: "string", maxLength: 50, example: "alice" },
+          fullName: { type: "string", maxLength: 100, example: "Alice Lee" },
+          email: { type: "string", format: "email", maxLength: 200, example: "alice@example.com" },
           password: { type: "string", minLength: 8, example: "correct-horse-battery" },
-          email: { type: "string", maxLength: 200, example: "alice@example.com" },
         },
       },
       LoginInput: {
         type: "object",
-        required: ["username", "password"],
+        required: ["email", "password"],
         properties: {
-          username: { type: "string", example: "alice" },
+          email: { type: "string", format: "email", example: "alice@example.com" },
           password: { type: "string", example: "correct-horse-battery" },
         },
       },
@@ -94,7 +95,7 @@ export const openApiSpec = {
         type: "object",
         properties: {
           id: { type: "string", format: "uuid" },
-          classType: { type: "string", enum: ["A", "B", "C"] },
+          classType: { type: "string", enum: ["A", "B"] },
           cargoType: { type: "string", maxLength: 100 },
           cargoValue: { type: "number", format: "double", minimum: 0.01 },
           origin: { type: "string", maxLength: 100 },
@@ -120,7 +121,7 @@ export const openApiSpec = {
         type: "object",
         required: ["classType", "cargoType", "cargoValue", "origin", "destination"],
         properties: {
-          classType: { type: "string", enum: ["A", "B", "C"], example: "B" },
+          classType: { type: "string", enum: ["A", "B"], example: "B" },
           cargoType: { type: "string", maxLength: 100, example: "electronics" },
           cargoValue: {
             type: "number",
@@ -146,6 +147,51 @@ export const openApiSpec = {
           data: { type: "array", items: { $ref: "#/components/schemas/Policy" } },
           pagination: { $ref: "#/components/schemas/Pagination" },
         },
+      },
+
+      QuoteCounts: {
+        type: "object",
+        properties: {
+          ALL: { type: "integer" },
+          GENERATED: { type: "integer" },
+          CONVERTED: { type: "integer" },
+          EXPIRED: { type: "integer" },
+        },
+      },
+
+      PolicyCounts: {
+        type: "object",
+        properties: {
+          ALL: { type: "integer" },
+          PENDING_APPROVAL: { type: "integer" },
+          APPROVED: { type: "integer" },
+          REJECTED: { type: "integer" },
+        },
+      },
+
+      UserCounts: {
+        type: "object",
+        properties: {
+          ALL: { type: "integer" },
+          ADMIN: { type: "integer" },
+          STAFF: { type: "integer" },
+          USER: { type: "integer" },
+        },
+      },
+
+      Notification: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          userId: { type: "string", format: "uuid" },
+          title: { type: "string" },
+          message: { type: "string" },
+          linkType: { type: "string", nullable: true, example: "POLICY" },
+          linkId: { type: "string", nullable: true },
+          isRead: { type: "boolean" },
+          createdAt: { type: "string", format: "date-time" },
+        },
+        required: ["id", "userId", "title", "message", "isRead", "createdAt"],
       },
 
       Policy: {
@@ -174,7 +220,17 @@ export const openApiSpec = {
       },
       PolicyInput: {
         type: "object",
-        required: ["quoteId", "customerName"],
+        required: [
+          "quoteId",
+          "customerName",
+          "proformaInvoice",
+          "mode",
+          "currency",
+          "invoiceValue",
+          "exchangeRate",
+          "startDate",
+          "endDate",
+        ],
         properties: {
           quoteId: {
             type: "string",
@@ -182,6 +238,13 @@ export const openApiSpec = {
             description: "ID of an existing Quote in GENERATED status",
           },
           customerName: { type: "string", maxLength: 100, example: "Acme Co" },
+          proformaInvoice: { type: "string", maxLength: 200 },
+          mode: { type: "string", enum: ["SEA", "AIR"] },
+          currency: { type: "string", enum: ["USD", "GBP", "JPY", "EUR"] },
+          invoiceValue: { type: "number", format: "double", exclusiveMinimum: 0 },
+          exchangeRate: { type: "number", format: "double", exclusiveMinimum: 0 },
+          startDate: { type: "string", format: "date" },
+          endDate: { type: "string", format: "date" },
         },
       },
       PolicyCreateResponse: {
@@ -260,7 +323,7 @@ export const openApiSpec = {
         content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } },
       },
       Conflict: {
-        description: "Resource conflict (e.g. username taken)",
+        description: "Resource conflict (e.g. email already registered)",
         content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } },
       },
       TooManyRequests: {
@@ -377,12 +440,62 @@ export const openApiSpec = {
         },
       },
     },
+    "/api/auth/me": {
+      get: {
+        tags: ["Auth"],
+        summary: "Get the authenticated user's profile",
+        security: [{ BearerAuth: [] }],
+        responses: {
+          200: {
+            description: "User profile",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/User" } } },
+          },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          404: { $ref: "#/components/responses/NotFound" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+      patch: {
+        tags: ["Auth"],
+        summary: "Update the authenticated user's profile",
+        description:
+          "Partial update. Allowed fields: fullName, email, and a password change (requires currentPassword + newPassword).",
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  fullName: { type: "string", maxLength: 100 },
+                  email: { type: "string", format: "email", maxLength: 200 },
+                  currentPassword: { type: "string" },
+                  newPassword: { type: "string", minLength: 8, maxLength: 200 },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Updated user",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/User" } } },
+          },
+          400: { $ref: "#/components/responses/BadRequest" },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          404: { $ref: "#/components/responses/NotFound" },
+          409: { $ref: "#/components/responses/Conflict" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
 
     "/api/quote": {
       post: {
         tags: ["Quote"],
         summary: "Create a quote",
-        description: "Premium = cargoValue × rate(classType). A=10%, B=0.7%, C=0.5%.",
+        description: "Premium = cargoValue × the authenticated user's per-class rate (classARate for class A, classBRate for class B).",
         security: [{ BearerAuth: [] }],
         requestBody: {
           required: true,
@@ -454,6 +567,23 @@ export const openApiSpec = {
             description: "Paginated list of your quotes",
             content: {
               "application/json": { schema: { $ref: "#/components/schemas/QuoteList" } },
+            },
+          },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
+    "/api/quote/mine/counts": {
+      get: {
+        tags: ["Quote"],
+        summary: "Counts of the authenticated user's quotes by status",
+        security: [{ BearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Status counts",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/QuoteCounts" } },
             },
           },
           401: { $ref: "#/components/responses/Unauthorized" },
@@ -552,6 +682,99 @@ export const openApiSpec = {
         },
       },
     },
+    "/api/quote/{id}": {
+      get: {
+        tags: ["Quote"],
+        summary: "Get a single quote (creator or ADMIN/STAFF)",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        responses: {
+          200: {
+            description: "Quote",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/Quote" } } },
+          },
+          400: { $ref: "#/components/responses/BadRequest" },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          403: { $ref: "#/components/responses/Forbidden" },
+          404: { $ref: "#/components/responses/NotFound" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+      patch: {
+        tags: ["Quote"],
+        summary: "Edit a GENERATED quote (creator or ADMIN/STAFF)",
+        description:
+          "Partial update. Premium is recomputed from classType × cargoValue server-side. Only allowed while the quote is GENERATED; once CONVERTED or EXPIRED returns 409.",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  classType: { type: "string", enum: ["A", "B"] },
+                  cargoType: { type: "string", maxLength: 100 },
+                  cargoValue: { type: "number", format: "double", exclusiveMinimum: 0 },
+                  origin: { type: "string", maxLength: 100 },
+                  destination: { type: "string", maxLength: 100 },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Updated quote",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/Quote" } } },
+          },
+          400: { $ref: "#/components/responses/BadRequest" },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          403: { $ref: "#/components/responses/Forbidden" },
+          404: { $ref: "#/components/responses/NotFound" },
+          409: { $ref: "#/components/responses/Conflict" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+      delete: {
+        tags: ["Quote"],
+        summary: "Delete a GENERATED quote (ADMIN only)",
+        description: "Only allowed while the quote is GENERATED; otherwise returns 409.",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        responses: {
+          204: { description: "Deleted" },
+          400: { $ref: "#/components/responses/BadRequest" },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          403: { $ref: "#/components/responses/Forbidden" },
+          404: { $ref: "#/components/responses/NotFound" },
+          409: { $ref: "#/components/responses/Conflict" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
 
     "/api/policy": {
       post: {
@@ -645,6 +868,41 @@ export const openApiSpec = {
             },
           },
           401: { $ref: "#/components/responses/Unauthorized" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
+    "/api/policy/mine/counts": {
+      get: {
+        tags: ["Policy"],
+        summary: "Counts of the authenticated user's policies by status",
+        security: [{ BearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Status counts",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/PolicyCounts" } },
+            },
+          },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
+    "/api/policy/counts": {
+      get: {
+        tags: ["Policy"],
+        summary: "Counts of ALL policies by status (ADMIN)",
+        security: [{ BearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Status counts across every policy",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/PolicyCounts" } },
+            },
+          },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          403: { $ref: "#/components/responses/Forbidden" },
           500: { $ref: "#/components/responses/ServerError" },
         },
       },
@@ -757,6 +1015,36 @@ export const openApiSpec = {
         },
       },
     },
+    "/api/policy/{id}": {
+      get: {
+        tags: ["Policy"],
+        summary: "Get a single policy by id",
+        description:
+          "ADMIN/STAFF can fetch any policy; a regular user can only fetch policies they issued.",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        responses: {
+          200: {
+            description: "Policy",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/Policy" } },
+            },
+          },
+          400: { $ref: "#/components/responses/BadRequest" },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          403: { $ref: "#/components/responses/Forbidden" },
+          404: { $ref: "#/components/responses/NotFound" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
     "/api/policy/certificate/{policyNumber}": {
       get: {
         tags: ["Policy"],
@@ -854,7 +1142,7 @@ export const openApiSpec = {
       get: {
         tags: ["User"],
         summary: "List users (ADMIN, paginated)",
-        description: "Returns only id and email — no sensitive fields.",
+        description: "Returns id, fullName, email, role, and per-class rates. No password or wallet.",
         security: [{ BearerAuth: [] }],
         parameters: [
           { name: "page", in: "query", schema: { type: "integer", minimum: 1, default: 1 } },
@@ -863,6 +1151,7 @@ export const openApiSpec = {
             in: "query",
             schema: { type: "integer", minimum: 1, maximum: 100, default: 10 },
           },
+          { name: "role", in: "query", schema: { $ref: "#/components/schemas/Role" } },
         ],
         responses: {
           200: {
@@ -878,7 +1167,11 @@ export const openApiSpec = {
                         type: "object",
                         properties: {
                           id: { type: "string", format: "uuid" },
-                          email: { type: "string", nullable: true },
+                          fullName: { type: "string" },
+                          email: { type: "string", format: "email" },
+                          role: { $ref: "#/components/schemas/Role" },
+                          classARate: { type: "number", format: "double", minimum: 0, maximum: 1 },
+                          classBRate: { type: "number", format: "double", minimum: 0, maximum: 1 },
                         },
                       },
                     },
@@ -890,6 +1183,244 @@ export const openApiSpec = {
           },
           401: { $ref: "#/components/responses/Unauthorized" },
           403: { $ref: "#/components/responses/Forbidden" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+      post: {
+        tags: ["User"],
+        summary: "Create a new user (ADMIN)",
+        description:
+          "Admin-only user creation. Admin picks the role (defaults to USER) and the per-class rates (decimal 0-1, e.g. 0.1 = 10%). Strong password rule applies (8-200 chars, mixed case + digit + symbol).",
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["fullName", "email", "password", "classARate", "classBRate"],
+                properties: {
+                  fullName: { type: "string", maxLength: 100 },
+                  email: { type: "string", format: "email", maxLength: 200 },
+                  password: { type: "string", minLength: 8, maxLength: 200 },
+                  role: { $ref: "#/components/schemas/Role" },
+                  classARate: {
+                    type: "number",
+                    format: "double",
+                    minimum: 0,
+                    maximum: 1,
+                    example: 0.1,
+                  },
+                  classBRate: {
+                    type: "number",
+                    format: "double",
+                    minimum: 0,
+                    maximum: 1,
+                    example: 0.007,
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: {
+            description: "Created user (password stripped)",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/User" } } },
+          },
+          400: { $ref: "#/components/responses/BadRequest" },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          403: { $ref: "#/components/responses/Forbidden" },
+          409: { $ref: "#/components/responses/Conflict" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
+    "/api/user/counts": {
+      get: {
+        tags: ["User"],
+        summary: "User counts by role (ADMIN)",
+        security: [{ BearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Role counts",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/UserCounts" } },
+            },
+          },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          403: { $ref: "#/components/responses/Forbidden" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
+    "/api/user/{id}/role": {
+      patch: {
+        tags: ["User"],
+        summary: "Change a user's role (ADMIN)",
+        description: "Cannot change your own role.",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["role"],
+                properties: { role: { $ref: "#/components/schemas/Role" } },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Updated user",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string", format: "uuid" },
+                    fullName: { type: "string" },
+                    email: { type: "string", format: "email" },
+                    role: { $ref: "#/components/schemas/Role" },
+                  },
+                },
+              },
+            },
+          },
+          400: { $ref: "#/components/responses/BadRequest" },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          403: { $ref: "#/components/responses/Forbidden" },
+          404: { $ref: "#/components/responses/NotFound" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
+    "/api/user/{id}/rates": {
+      patch: {
+        tags: ["User"],
+        summary: "Update a user's per-class rates (ADMIN)",
+        description:
+          "Both rates are decimals between 0 and 1 (0.1 = 10%). Future quotes created by this user will use the new rates; existing quotes are not retroactively recomputed.",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["classARate", "classBRate"],
+                properties: {
+                  classARate: {
+                    type: "number",
+                    format: "double",
+                    minimum: 0,
+                    maximum: 1,
+                    example: 0.1,
+                  },
+                  classBRate: {
+                    type: "number",
+                    format: "double",
+                    minimum: 0,
+                    maximum: 1,
+                    example: 0.007,
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Updated user with new rates",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string", format: "uuid" },
+                    fullName: { type: "string" },
+                    email: { type: "string", format: "email" },
+                    role: { $ref: "#/components/schemas/Role" },
+                    classARate: { type: "number", format: "double" },
+                    classBRate: { type: "number", format: "double" },
+                  },
+                },
+              },
+            },
+          },
+          400: { $ref: "#/components/responses/BadRequest" },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          403: { $ref: "#/components/responses/Forbidden" },
+          404: { $ref: "#/components/responses/NotFound" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
+
+    "/api/notifications": {
+      get: {
+        tags: ["Notification"],
+        summary: "List the authenticated user's notifications (newest first)",
+        security: [{ BearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Array of notifications",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: { $ref: "#/components/schemas/Notification" },
+                },
+              },
+            },
+          },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          500: { $ref: "#/components/responses/ServerError" },
+        },
+      },
+    },
+    "/api/notifications/{id}/read": {
+      patch: {
+        tags: ["Notification"],
+        summary: "Mark a notification as read",
+        description: "404 if the notification does not exist or belongs to another user.",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        responses: {
+          200: {
+            description: "Updated notification",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/Notification" } },
+            },
+          },
+          400: { $ref: "#/components/responses/BadRequest" },
+          401: { $ref: "#/components/responses/Unauthorized" },
+          404: { $ref: "#/components/responses/NotFound" },
           500: { $ref: "#/components/responses/ServerError" },
         },
       },
@@ -909,7 +1440,7 @@ export const openApiSpec = {
                   type: "object",
                   properties: {
                     id: { type: "string", format: "uuid" },
-                    username: { type: "string" },
+                    fullName: { type: "string" },
                     wallet: { type: "number", format: "double" },
                   },
                 },
@@ -957,7 +1488,7 @@ export const openApiSpec = {
                       type: "object",
                       properties: {
                         id: { type: "string", format: "uuid" },
-                        username: { type: "string" },
+                        fullName: { type: "string" },
                         role: { type: "string" },
                         wallet: { type: "number", format: "double" },
                       },

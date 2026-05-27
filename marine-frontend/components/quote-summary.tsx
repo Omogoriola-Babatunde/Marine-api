@@ -1,7 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ngn } from "@/lib/format";
 import type { Quote } from "@/lib/types";
-
-const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 
 export function QuoteSummary({ quote }: { quote: Quote }) {
   return (
@@ -23,11 +22,11 @@ export function QuoteSummary({ quote }: { quote: Quote }) {
         </div>
         <div>
           <div className="text-muted-foreground">Cargo value</div>
-          <div className="font-medium">{usd.format(quote.cargoValue)}</div>
+          <div className="font-medium">{ngn(quote.cargoValue)}</div>
         </div>
         <div>
           <div className="text-muted-foreground">Premium</div>
-          <div className="font-medium">{usd.format(quote.premium)}</div>
+          <div className="font-medium">{ngn(quote.premium)}</div>
         </div>
       </CardContent>
     </Card>

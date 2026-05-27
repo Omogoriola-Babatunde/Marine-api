@@ -1,15 +1,18 @@
-import { QuoteForm } from "@/components/quote-form";
+"use client";
+
+import { useEffect } from "react";
+import { getStoredUser, getToken } from "@/lib/auth";
 
 export default function HomePage() {
-  return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-semibold">Get a marine cargo quote</h1>
-        <p className="text-muted-foreground">
-          Fill in the cargo details to see your premium. You can issue a policy on the next step.
-        </p>
-      </header>
-      <QuoteForm />
-    </div>
-  );
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!getToken()) {
+      window.location.replace("/login");
+      return;
+    }
+    const user = getStoredUser();
+    window.location.replace(user?.role === "ADMIN" ? "/dashboard" : "/quotes");
+  }, []);
+
+  return null;
 }

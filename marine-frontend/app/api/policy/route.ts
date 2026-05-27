@@ -1,14 +1,9 @@
-import { env } from "@/lib/env";
+import { proxyToBackend } from "@/lib/proxy";
+
+export async function GET(req: Request): Promise<Response> {
+  return proxyToBackend(req, "/api/policy", "GET");
+}
 
 export async function POST(req: Request): Promise<Response> {
-  const body = await req.text();
-  const upstream = await fetch(`${env.API_URL}/api/policy`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body,
-  });
-  return new Response(upstream.body, {
-    status: upstream.status,
-    headers: { "content-type": upstream.headers.get("content-type") ?? "application/json" },
-  });
+  return proxyToBackend(req, "/api/policy", "POST");
 }

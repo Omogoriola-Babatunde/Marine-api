@@ -12,17 +12,30 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useAuthUser } from "@/hooks/use-auth-user";
 import { useCreateQuote } from "@/hooks/use-create-quote";
 import { type CreateQuoteSchema, createQuoteSchema } from "@/lib/schemas";
 
-const CLASS_OPTIONS = [
-  { value: "A", label: "A — Premium (10%)" },
-  { value: "B", label: "B — Standard (0.7%)" },
-  { value: "C", label: "C — Basic (0.5%)" },
-] as const;
+const formatRate = (rate: number | undefined): string => {
+  if (rate == null || !Number.isFinite(rate)) return "—";
+  const pct = rate * 100;
+  return Number.isInteger(pct) ? `${pct}%` : `${pct.toFixed(2).replace(/\.?0+$/, "")}%`;
+};
 
 export function QuoteForm() {
   const mutation = useCreateQuote();
+  const me = useAuthUser();
+  const classOptions = [
+    { value: "A", label: `Class A (${formatRate(me?.classARate)})` },
+    { value: "B", label: `Class B (${formatRate(me?.classBRate)})` },
+  ] as const;
   const form = useForm<CreateQuoteSchema>({
     resolver: zodResolver(createQuoteSchema),
     defaultValues: {
@@ -48,19 +61,24 @@ export function QuoteForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Class</FormLabel>
-              <FormControl>
-                <select
-                  {...field}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  disabled={mutation.isPending}
-                >
-                  {CLASS_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
+              <Select
+                value={field.value}
+                onValueChange={field.onChange}
+                disabled={mutation.isPending}
+              >
+                <FormControl>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a class" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {classOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
                       {opt.label}
-                    </option>
+                    </SelectItem>
                   ))}
-                </select>
-              </FormControl>
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -85,7 +103,7 @@ export function QuoteForm() {
           name="cargoValue"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Cargo value (USD)</FormLabel>
+              <FormLabel>Cargo value (₦)</FormLabel>
               <FormControl>
                 <Input
                   type="number"

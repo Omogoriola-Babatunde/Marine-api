@@ -1,8 +1,17 @@
 import { getPrismaClient } from "../config/db.js";
 import { createAuditLog } from "../utils/auditLogger.js";
+import { createNotification } from "../utils/notification.js";
 import { isUuid } from "../utils/validation.js";
 
 const prisma = getPrismaClient();
+
+const NAIRA = "₦";
+const nairaFmt = new Intl.NumberFormat("en-NG", {
+  style: "decimal",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+const ngn = (n) => `${NAIRA}${nairaFmt.format(Math.abs(Number(n) || 0))}`;
 
 export const topupWallet = async (req, res) => {
   try {
@@ -27,7 +36,7 @@ export const topupWallet = async (req, res) => {
       const updated = await tx.user.update({
         where: { id: userId },
         data: { wallet: { increment: amount } },
-        select: { id: true, username: true, wallet: true, role: true },
+        select: { id: true, fullName: true, wallet: true, role: true },
       });
       const transaction = await tx.walletTransaction.create({
         data: {
@@ -46,6 +55,21 @@ export const topupWallet = async (req, res) => {
       description: `Credited ${amount} to user ${userId} (new balance ${result.user.wallet})`,
     });
 
+    // Notify the recipient and the admin who funded. Best-effort — createNotification
+    // already swallows its own errors so the top-up response isn't blocked.
+    await Promise.all([
+      createNotification({
+        userId,
+        title: "Wallet funded",
+        message: `Your wallet was credited with ${ngn(amount)}. New balance: ${ngn(result.user.wallet)}.`,
+      }),
+      createNotification({
+        userId: req.user.userId,
+        title: "Top-up successful",
+        message: `Credited ${ngn(amount)} to ${target.fullName}.`,
+      }),
+    ]);
+
     res.status(200).json({ message: "Wallet topped up", ...result });
   } catch (error) {
     console.error("topupWallet error:", error);
@@ -57,7 +81,7 @@ export const getMyBalance = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId },
-      select: { id: true, username: true, wallet: true },
+      select: { id: true, fullName: true, wallet: true },
     });
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);

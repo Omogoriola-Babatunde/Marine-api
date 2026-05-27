@@ -1,11 +1,12 @@
 "use client";
 
-import { skipToken, useQuery } from "@tanstack/react-query";
-import type { Quote } from "@/lib/types";
+import { useQuery } from "@tanstack/react-query";
+import { getQuoteById } from "@/lib/api-client";
 
 export function useQuote(id: string) {
-  return useQuery<Quote | undefined>({
+  return useQuery({
+    enabled: !!id,
     queryKey: ["quote", id],
-    queryFn: skipToken,
+    queryFn: () => getQuoteById(id),
   });
 }

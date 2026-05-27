@@ -14,9 +14,19 @@ const POLICY_NUMBER_RE = /^POL-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[
 
 export const createPolicy = async (req, res) => {
   try {
-    const { quoteId, customerName } = req.body;
+    const {
+      quoteId,
+      customerName,
+      proformaInvoice,
+      mode,
+      currency,
+      invoiceValue,
+      exchangeRate,
+      startDate,
+      endDate,
+    } = req.body;
 
-    const validation = validatePolicyInput({ quoteId, customerName });
+    const validation = validatePolicyInput(req.body);
     if (!validation.valid) {
       return res.status(400).json({ errors: validation.errors });
     }
@@ -36,6 +46,13 @@ export const createPolicy = async (req, res) => {
           policyNumber,
           quoteId,
           customerName,
+          proformaInvoice: proformaInvoice || null,
+          mode: mode ? mode.toUpperCase() : null,
+          currency: currency ? currency.toUpperCase() : null,
+          invoiceValue: invoiceValue ?? null,
+          exchangeRate: exchangeRate ?? null,
+          startDate: startDate ? new Date(startDate) : null,
+          endDate: endDate ? new Date(endDate) : null,
           status: "PENDING_APPROVAL",
           issuedById: req.user.userId,
         },
@@ -111,6 +128,8 @@ export const approvePolicy = async (req, res) => {
       userId: policy.issuedById,
       title: "Policy Approved",
       message: `Policy ${policy.policyNumber} has been approved.`,
+      linkType: "POLICY",
+      linkId: policy.id,
     });
     await createAuditLog({
       userId: req.user.userId,
@@ -145,6 +164,13 @@ export const rejectPolicy = async (req, res) => {
       data: { status: "REJECTED" },
     });
 
+    await createNotification({
+      userId: policy.issuedById,
+      title: "Policy Rejected",
+      message: `Policy ${policy.policyNumber} was rejected.`,
+      linkType: "POLICY",
+      linkId: policy.id,
+    });
     await createAuditLog({
       userId: req.user.userId,
       action: "REJECT_POLICY",
@@ -178,7 +204,7 @@ export const getPolicies = async (req, res) => {
         take: limit,
         include: {
           quote: true,
-          issuedBy: { select: { id: true, username: true, email: true, role: true } },
+          issuedBy: { select: { id: true, fullName: true, email: true, role: true } },
         },
         orderBy: { createdAt: "desc" },
       }),
@@ -202,7 +228,7 @@ export const getpendingPolicies = async (_req, res) => {
       include: {
         quote: true,
         issuedBy: {
-          select: { id: true, username: true, email: true, role: true },
+          select: { id: true, fullName: true, email: true, role: true },
         },
       },
       orderBy: { createdAt: "desc" },
@@ -226,7 +252,16 @@ export const getMyPolicies = async (req, res) => {
       return res.status(400).json({ error: `status must be one of ${allowed.join(", ")}` });
     }
 
-    const where = { issuedById: req.user.userId, ...(status ? { status } : {}) };
+    const quoteId = req.query.quoteId;
+    if (quoteId !== undefined && !isUuid(quoteId)) {
+      return res.status(400).json({ error: "quoteId must be a valid uuid" });
+    }
+
+    const where = {
+      issuedById: req.user.userId,
+      ...(status ? { status } : {}),
+      ...(quoteId ? { quoteId } : {}),
+    };
 
     const [policies, total] = await Promise.all([
       prisma.policy.findMany({
@@ -249,6 +284,111 @@ export const getMyPolicies = async (req, res) => {
   }
 };
 
+export const getAllPolicyCounts = async (_req, res) => {
+  try {
+    const grouped = await prisma.policy.groupBy({
+      by: ["status"],
+      _count: { _all: true },
+    });
+    const out = { ALL: 0, PENDING_APPROVAL: 0, APPROVED: 0, REJECTED: 0 };
+    for (const g of grouped) {
+      out[g.status] = g._count._all;
+      out.ALL += g._count._all;
+    }
+    res.json(out);
+  } catch (error) {
+    console.error("getAllPolicyCounts error:", error);
+    res.status(500).json({ error: "Failed to fetch policy counts" });
+  }
+};
+
+export const getMyPolicyCounts = async (req, res) => {
+  try {
+    const grouped = await prisma.policy.groupBy({
+      by: ["status"],
+      where: { issuedById: req.user.userId },
+      _count: { _all: true },
+    });
+    const out = { ALL: 0, PENDING_APPROVAL: 0, APPROVED: 0, REJECTED: 0 };
+    for (const g of grouped) {
+      out[g.status] = g._count._all;
+      out.ALL += g._count._all;
+    }
+    res.json(out);
+  } catch (error) {
+    console.error("getMyPolicyCounts error:", error);
+    res.status(500).json({ error: "Failed to fetch policy counts" });
+  }
+};
+
+const clampDays = (raw) => Math.max(1, Math.min(90, parseInt(raw, 10) || 30));
+
+const fillDateSeries = (rows, days) => {
+  const map = new Map(rows.map((r) => [r.date, Number(r.count)]));
+  const series = [];
+  const now = new Date();
+  now.setUTCHours(0, 0, 0, 0);
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setUTCDate(d.getUTCDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    series.push({ date: key, count: map.get(key) ?? 0 });
+  }
+  return series;
+};
+
+export const getMyPolicyTimeseries = async (req, res) => {
+  try {
+    const days = clampDays(req.query.days);
+    const cutoff = new Date();
+    cutoff.setUTCHours(0, 0, 0, 0);
+    cutoff.setUTCDate(cutoff.getUTCDate() - (days - 1));
+    const rows = await prisma.$queryRaw`
+      SELECT to_char(date_trunc('day', "createdAt"), 'YYYY-MM-DD') AS date,
+             COUNT(*)::int AS count
+      FROM "Policy"
+      WHERE "issuedById" = ${req.user.userId}
+        AND "createdAt" >= ${cutoff}
+      GROUP BY 1
+      ORDER BY 1
+    `;
+    res.json({ days, data: fillDateSeries(rows, days) });
+  } catch (error) {
+    console.error("getMyPolicyTimeseries error:", error);
+    res.status(500).json({ error: "Failed to fetch policy timeseries" });
+  }
+};
+
+export const getPolicyById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!isUuid(id)) {
+      return res.status(400).json({ error: "Invalid policy id" });
+    }
+
+    const policy = await prisma.policy.findUnique({
+      where: { id },
+      include: {
+        quote: true,
+        issuedBy: { select: { id: true, fullName: true, email: true, role: true } },
+      },
+    });
+    if (!policy) {
+      return res.status(404).json({ error: "Policy not found" });
+    }
+
+    const isPrivileged = req.user.role === "ADMIN" || req.user.role === "STAFF";
+    if (!isPrivileged && policy.issuedById !== req.user.userId) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    res.json(policy);
+  } catch (error) {
+    console.error("getPolicyById error:", error);
+    res.status(500).json({ error: "Failed to fetch policy" });
+  }
+};
+
 export const getapprovedPolicies = async (_req, res) => {
   try {
     const policies = await prisma.policy.findMany({
@@ -256,7 +396,7 @@ export const getapprovedPolicies = async (_req, res) => {
       include: {
         quote: true,
         issuedBy: {
-          select: { id: true, username: true, email: true, role: true },
+          select: { id: true, fullName: true, email: true, role: true },
         },
       },
       orderBy: { createdAt: "desc" },

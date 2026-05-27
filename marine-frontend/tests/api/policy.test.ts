@@ -28,7 +28,7 @@ describe("POST /api/policy (proxy)", () => {
     const req = new Request("http://localhost:3000/api/policy", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ quoteId: "abc", customername: "Acme" }),
+      body: JSON.stringify({ quoteId: "abc", customerName: "Acme" }),
     });
 
     const res = await POST(req);
@@ -50,7 +50,7 @@ describe("POST /api/policy (proxy)", () => {
     const { POST } = await import("@/app/api/policy/route");
     const req = new Request("http://localhost:3000/api/policy", {
       method: "POST",
-      body: JSON.stringify({ quoteId: "missing", customername: "X" }),
+      body: JSON.stringify({ quoteId: "missing", customerName: "X" }),
     });
 
     const res = await POST(req);
